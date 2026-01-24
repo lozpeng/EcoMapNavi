@@ -1,0 +1,93 @@
+plugins {
+    alias libs.plugins.androidApplication
+    alias libs.plugins.jetbrainsKotlinAndroid
+    alias libs.plugins.ktfmt
+    alias libs.plugins.compose.compiler
+}
+
+android {
+    namespace 'org.eco.map'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "org.eco.map.pro"
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary true
+        }
+
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file("local.properties").newDataInputStream())
+
+        android.buildFeatures.buildConfig true
+        buildConfigField "String", "stadiaApiKey", "\"${properties.getProperty("stadiaApiKey")}\""
+        buildConfigField "String", "graphhopperApiKey", "\"${properties.getProperty("graphhopperApiKey")}\""
+        buildConfigField "String", "mapStyleUrl", "\"asset://raster_style_tdt.json\""
+        buildConfigField "String", "glyphsUrl", "\"asset://glyphs/{fontstack}/{range}.pbf\""
+        buildConfigField "String", "spriteUrl", "\"asset://sprites/sprite\""
+        buildConfigField "String", "tdtApiKey","\" \""
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    buildFeatures {
+        compose true
+    }
+    packagingOptions {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+}
+
+dependencies {
+    // Temporary until we can drop support for API < 26
+    coreLibraryDesugaring libs.desugar.jdk.libs
+
+    implementation libs.androidx.ktx
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.activity.compose
+
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.graphics
+    implementation libs.androidx.compose.ui.tooling
+    implementation libs.androidx.compose.material3
+
+    implementation project(':core')
+    implementation project(':composeui')
+    implementation project(':maplibreui')
+    implementation project(':google-play-services')
+
+    implementation libs.maplibre.compose
+
+    implementation platform(libs.okhttp.bom)
+    implementation libs.okhttp.core
+
+    implementation libs.play.services.location
+
+    implementation libs.stadiamaps.autocomplete.search
+
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.test.junit
+    androidTestImplementation libs.androidx.test.espresso
+    androidTestImplementation libs.androidx.compose.ui.test.junit4
+    debugImplementation libs.androidx.compose.ui.test.manifest
+}
