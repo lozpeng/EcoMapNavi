@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace 'org.eco.map'
+    namespace 'org.cwcc.open.eco'
     compileSdk 35
 
     defaultConfig {
-        applicationId "org.eco.map.pro"
+        applicationId "org.cwcc.open.eco.pro"
         minSdk 26
         targetSdk 35
         versionCode 1
@@ -30,7 +30,7 @@ android {
         buildConfigField "String", "mapStyleUrl", "\"asset://raster_style_tdt.json\""
         buildConfigField "String", "glyphsUrl", "\"asset://glyphs/{fontstack}/{range}.pbf\""
         buildConfigField "String", "spriteUrl", "\"asset://sprites/sprite\""
-        buildConfigField "String", "tdtApiKey","\" \""
+        buildConfigField "String", "tdtApiKey","\"f19ae980c3b51bc649060f98a2a49f92\""
     }
 
     buildTypes {
@@ -39,6 +39,24 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    signingConfigs {
+        def ecomap = keyStorePath()
+        println ecomap
+        debug {
+            storeFile file(ecomap)
+            storePassword 'ani9772'
+            keyAlias 'ecomap'
+            keyPassword "123456"
+        }
+        release {
+            storeFile file(ecomap)
+            storePassword 'ani9772'
+            keyAlias 'ecomap'
+            keyPassword '123456'
+        }
+    }
+
     compileOptions {
         coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -56,7 +74,13 @@ android {
         }
     }
 }
-
+def keyStorePath()
+{
+    def windows  = 'F://Dev//MapLibre//EcoMap//EcoMapNavi//android//EcoMapPro//keystore//ecomap.jks'
+    def linux = '/media/lyj/新加卷-F盘/Dev/MapLibre/EcoMap/EcoMapNavi/android/EcoMapPro/keystore/ecomap.jks'
+    def isWindows = org.gradle.internal.os.OperatingSystem.current().isWindows();
+    return isWindows?windows : linux
+}
 dependencies {
     // Temporary until we can drop support for API < 26
     coreLibraryDesugaring libs.desugar.jdk.libs

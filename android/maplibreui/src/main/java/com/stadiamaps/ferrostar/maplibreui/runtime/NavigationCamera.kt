@@ -8,13 +8,22 @@ import com.maplibre.compose.camera.models.CameraPadding
 
 sealed class NavigationActivity(val zoom: Double, val pitch: Double) {
   /** The recommended camera configuration for automotive navigation. */
-  data object Automotive : NavigationActivity(zoom = 16.0, pitch = 45.0)
+//  data object Automotive : NavigationActivity(zoom = 16.0, pitch = 45.0)
+//
+//  /** The recommended camera configuration for bicycle navigation. */
+//  data object Bicycle : NavigationActivity(zoom = 18.0, pitch = 45.0)
+//
+//  /** The recommended camera configuration for pedestrian navigation. */
+//  data object Pedestrian : NavigationActivity(zoom = 20.0, pitch = 10.0)
+
+  /** The recommended camera configuration for automotive navigation. */
+  data object Automotive : NavigationActivity(zoom = 5.0, pitch = 45.0)
 
   /** The recommended camera configuration for bicycle navigation. */
-  data object Bicycle : NavigationActivity(zoom = 18.0, pitch = 45.0)
+  data object Bicycle : NavigationActivity(zoom = 5.0, pitch = 45.0)
 
   /** The recommended camera configuration for pedestrian navigation. */
-  data object Pedestrian : NavigationActivity(zoom = 20.0, pitch = 10.0)
+  data object Pedestrian : NavigationActivity(zoom = 5.0, pitch = 10.0)
 }
 
 /**

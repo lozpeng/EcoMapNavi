@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import com.maplibre.compose.MapView
 import com.maplibre.compose.StaticLocationEngine
 import com.maplibre.compose.camera.MapViewCamera
+import com.maplibre.compose.mapLibreStyleUrl
 import com.maplibre.compose.ramani.LocationRequestProperties
 import com.maplibre.compose.ramani.MapLibreComposable
 import com.maplibre.compose.settings.MapControls
@@ -75,10 +76,14 @@ fun NavigationMapView(
       locationRequestProperties = locationRequestProperties,
       locationEngine = locationEngine,
       onMapReadyCallback =
-          onMapReadyCallback ?: { if (isNavigating) camera.value = navigationCamera },
+          onMapReadyCallback ?: {
+              if (isNavigating) camera.value = navigationCamera
+               val mapStyle: Style = it
+               val aa = mapStyle.json
+
+                                },
   ) {
     routeOverlayBuilder.navigationPath(uiState)
-
     if (content != null) {
       content(uiState)
     }

@@ -1,4 +1,4 @@
-package org.eco.map
+package org.cwcc.open.eco
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope

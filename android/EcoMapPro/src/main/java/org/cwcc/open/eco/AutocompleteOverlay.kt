@@ -1,4 +1,4 @@
-package org.eco.map
+package org.cwcc.open.eco
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding

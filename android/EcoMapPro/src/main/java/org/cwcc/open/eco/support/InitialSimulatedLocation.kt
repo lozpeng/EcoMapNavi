@@ -1,4 +1,4 @@
-package org.eco.map.support
+package org.cwcc.open.eco.support
 
 import java.time.Instant
 import uniffi.ferrostar.GeographicCoordinate

@@ -1,0 +1,41 @@
+//Key store file path
+import org.gradle.internal.os.OperatingSystem
+
+rootProject.ext.keyStorePath = KeyStorePath()
+
+def keyStorePath()
+{
+    def windows  = 'F://Dev//MapLibre//Demos//EcoMapPro//keystore//ecomap.jks'
+    def linux = '/media/lyj/新加卷-F盘/Dev/MapLibre/Demos/EcoMapPro/keystore/ecomap.jks'
+    return isWindows()?windows : linux
+}
+
+def isWindows()
+{
+    return org.gradle.internal.os.OperatingSystem.current().isWindows();
+}
+
+def keyStorePath2()
+{
+    switch (OperatingSystem.current()) {
+        case OperatingSystem.WINDOWS:
+            //
+            ecomap = 'F://Dev//MapLibre//Demos//EcoMapPro//keystore//ecomap.jks'
+            // Windows系统的配置
+            println "This is Windows"
+            break
+        case OperatingSystem.MAC_OS:
+            // macOS系统的配置
+            println "This is macOS"
+            break
+        case OperatingSystem.LINUX:
+            ecomap = '/media/lyj/新加卷-F盘/Dev/MapLibre/Demos/EcoMapPro/keystore/ecomap.jks'
+            // Linux系统的配置
+            println "This is Linux"
+            break
+        case OperatingSystem.OTHER:
+            // 其他系统的配置
+            println "This is another operating system"
+            break
+    }
+}

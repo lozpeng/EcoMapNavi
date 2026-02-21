@@ -1,4 +1,4 @@
-package org.eco.map.ui.theme
+package org.cwcc.open.eco.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

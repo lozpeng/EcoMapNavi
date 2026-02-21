@@ -1,4 +1,4 @@
-package org.eco.map
+package org.cwcc.open.eco
 
 import uniffi.ferrostar.CourseFiltering
 import uniffi.ferrostar.NavigationCachingConfig

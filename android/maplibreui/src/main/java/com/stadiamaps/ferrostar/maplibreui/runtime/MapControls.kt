@@ -2,6 +2,8 @@ package com.stadiamaps.ferrostar.maplibreui.runtime
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
+import android.view.Gravity
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -70,24 +72,40 @@ internal fun rememberMapControlsForProgressViewHeight(
         //  maplibre-compose.
         val attributionOffset = 24.dp
 
-        value =
-            MapControls(
-                attribution =
-                    AttributionSettings.initWithLayoutAndPosition(
-                        layoutDirection,
-                        density,
-                        position =
-                            MapControlPosition.BottomEnd(
+//        value =
+//            MapControls(
+//                attribution =
+//                    AttributionSettings.initWithLayoutAndPosition(
+//                        layoutDirection,
+//                        density,
+//                        position =
+//                            MapControlPosition.BottomEnd(
+//                                horizontal = endOffsetDp,
+//                                vertical = bottomOffsetDp + verticalPadding)),
+//                compass = CompassSettings(enabled = false),
+//                logo =
+//                    LogoSettings.initWithLayoutAndPosition(
+//                        layoutDirection,
+//                        density,
+//                        position =
+//                            MapControlPosition.BottomEnd(
+//                                horizontal = endOffsetDp + attributionOffset,
+//                                vertical = bottomOffsetDp + verticalPadding)))
+
+      value = MapControls(
+                  attribution = AttributionSettings(enabled=false),
+                  compass = CompassSettings.initWithLayoutAndPosition(
+                      layoutDirection,
+                      density,
+                      enabled=true,
+                      isFacingNorth=true ,
+                      position =
+                            MapControlPosition.TopEnd(
                                 horizontal = endOffsetDp,
-                                vertical = bottomOffsetDp + verticalPadding)),
-                compass = CompassSettings(enabled = false),
-                logo =
-                    LogoSettings.initWithLayoutAndPosition(
-                        layoutDirection,
-                        density,
-                        position =
-                            MapControlPosition.BottomEnd(
-                                horizontal = endOffsetDp + attributionOffset,
-                                vertical = bottomOffsetDp + verticalPadding)))
+                                vertical =  24.dp)
+                  ),
+                  logo = LogoSettings(enabled = false)
+                )
+
       }
 }

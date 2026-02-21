@@ -1,4 +1,4 @@
-package org.eco.map
+package org.cwcc.open.eco
 
 import android.content.Context
 import android.util.Log
@@ -19,6 +19,7 @@ import com.stadiamaps.ferrostar.googleplayservices.FusedLocationProvider
 import java.time.Duration
 import java.time.Instant
 import okhttp3.OkHttpClient
+import org.maplibre.android.geometry.LatLngBounds
 import uniffi.ferrostar.GeographicCoordinate
 import uniffi.ferrostar.GraphHopperVoiceUnits
 import uniffi.ferrostar.NavigationControllerConfig
@@ -34,7 +35,6 @@ object AppModule {
   private const val TAG = "AppModule"
 
   private lateinit var appContext: Context
-
   // Here we show examples of how to use Ferrostar with a routing API.
   //
   // See https://stadiamaps.github.io/ferrostar/vendors.html for a list of vendors
@@ -74,10 +74,13 @@ object AppModule {
       if(!BuildConfig.mapStyleUrl.isBlank())
           BuildConfig.mapStyleUrl
       else
-        if (stadiaApiKey != null)
-            "https://tiles.stadiamaps.com/styles/outdoors.json?api_key=$stadiaApiKey"
-        else "https://demotiles.maplibre.org/style.json"
+      {
+          if (stadiaApiKey != null)
+              "https://tiles.stadiamaps.com/styles/outdoors.json?api_key=$stadiaApiKey"
+          else "https://demotiles.maplibre.org/style.json"
+      }
   }
+
 
   fun init(context: Context) {
     appContext = context
@@ -189,4 +192,12 @@ object AppModule {
   val ttsObserver: AndroidTtsObserver by lazy { AndroidTtsObserver(appContext) }
 
   val viewModel: EcoMapNavigationViewModel by lazy { EcoMapNavigationViewModel() }
+
+
+    val chinaBund=LatLngBounds.from(
+        53.55,
+        135.08,
+        3.85,
+        73.55
+    )
 }

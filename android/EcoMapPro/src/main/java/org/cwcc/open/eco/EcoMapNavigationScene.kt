@@ -1,9 +1,10 @@
-package org.eco.map
+package org.cwcc.open.eco
 
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,24 +12,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import com.maplibre.compose.camera.CameraState
 import com.maplibre.compose.camera.MapViewCamera
+import com.maplibre.compose.camera.models.CameraPadding
 import com.maplibre.compose.rememberSaveableMapViewCamera
 import com.maplibre.compose.symbols.Circle
-import com.stadiamaps.autocomplete.center
 import com.stadiamaps.ferrostar.composeui.config.NavigationViewComponentBuilder
 import com.stadiamaps.ferrostar.composeui.config.VisualNavigationViewConfig
 import com.stadiamaps.ferrostar.composeui.config.withCustomOverlayView
 import com.stadiamaps.ferrostar.composeui.config.withSpeedLimitStyle
 import com.stadiamaps.ferrostar.composeui.runtime.KeepScreenOnDisposableEffect
 import com.stadiamaps.ferrostar.composeui.views.components.speedlimit.SignageStyle
+import com.stadiamaps.ferrostar.maplibreui.helper.getNextCamera
+import com.stadiamaps.ferrostar.maplibreui.helper.rememberLocationPermissionLauncher
+import com.stadiamaps.ferrostar.maplibreui.helper.rememberSynchronizedMapViewCamera
 import com.stadiamaps.ferrostar.maplibreui.views.DynamicallyOrientingNavigationView
 import kotlin.math.min
 import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.geometry.LatLngBounds
 
 @Composable
 fun EcoMapNavigationScene(
@@ -87,7 +94,33 @@ fun EcoMapNavigationScene(
   }
 
   // Set up the map!
-  val camera = rememberSaveableMapViewCamera(MapViewCamera.TrackingUserLocation())
+
+    val canChangeCamera = remember { mutableStateOf(false) }
+
+    val cameraPadding = CameraPadding.fractionOfScreen(top = 0.5f)
+
+    val mapViewCamera = rememberSaveableMapViewCamera(
+        initialCamera =MapViewCamera.BoundingBox(AppModule.chinaBund)) // Or rememberMapViewCamera()
+    val nextCameraState = getNextCamera(mapViewCamera.value.state)
+    val permissionLauncher =
+        rememberLocationPermissionLauncher(
+            onAccess = {
+                canChangeCamera.value = true
+                mapViewCamera.value = MapViewCamera.TrackingUserLocation()
+            },
+            onFailed = { Log.w("CameraExample", "Location permission denied") })
+    //
+    val camera = rememberSynchronizedMapViewCamera(
+        mapViewCamera,
+        {
+            when (it.state) {
+                is CameraState.TrackingUserLocationWithBearing ->
+                    it.copy(padding = cameraPadding)
+                else -> it.copy(padding = CameraPadding())
+
+            }
+        })
+    //val camera = rememberSaveableMapViewCamera(MapViewCamera.TrackingUserLocation())
   DynamicallyOrientingNavigationView(
       modifier = Modifier.fillMaxSize(),
       styleUrl = AppModule.mapStyleUrl, //MaplibreMap(baseStyle = BaseStyle.Uri(Res.getUri("files/style.json")))
