@@ -17,6 +17,5 @@ ext {
 
 allprojects {
     group = "com.stadiamaps.ferrostar"
-    //version = "0.46.1"
-    version = "SNAPSHOT"
+    version = "0.47.2"
 }
