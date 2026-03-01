@@ -192,12 +192,4 @@ object AppModule {
   val ttsObserver: AndroidTtsObserver by lazy { AndroidTtsObserver(appContext) }
 
   val viewModel: EcoMapNavigationViewModel by lazy { EcoMapNavigationViewModel() }
-
-
-    val chinaBund=LatLngBounds.from(
-        53.55,
-        135.08,
-        3.85,
-        73.55
-    )
 }

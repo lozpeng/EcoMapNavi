@@ -1,5 +1,7 @@
 package com.stadiamaps.ferrostar.maplibreui
 
+import android.Manifest
+import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -21,6 +23,7 @@ import com.stadiamaps.ferrostar.core.toAndroidLocation
 import com.stadiamaps.ferrostar.maplibreui.extensions.NavigationDefault
 import com.stadiamaps.ferrostar.maplibreui.routeline.RouteOverlayBuilder
 import com.stadiamaps.ferrostar.maplibreui.runtime.navigationMapViewCamera
+import org.maplibre.android.location.engine.LocationEngineResult
 import org.maplibre.android.maps.Style
 
 /**
@@ -43,6 +46,7 @@ import org.maplibre.android.maps.Style
  *   If unspecified, the camera will change to `navigationCamera` if navigation is in progress.
  * @param content Any additional composable map symbol content to render.
  */
+@RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
 @Composable
 fun NavigationMapView(
     styleUrl: String,
@@ -88,4 +92,9 @@ fun NavigationMapView(
       content(uiState)
     }
   }
+}
+
+fun locationCallBack(locResult:LocationEngineResult)
+{
+
 }

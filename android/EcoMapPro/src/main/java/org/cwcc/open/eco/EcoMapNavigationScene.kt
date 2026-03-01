@@ -29,7 +29,9 @@ import com.stadiamaps.ferrostar.composeui.config.withCustomOverlayView
 import com.stadiamaps.ferrostar.composeui.config.withSpeedLimitStyle
 import com.stadiamaps.ferrostar.composeui.runtime.KeepScreenOnDisposableEffect
 import com.stadiamaps.ferrostar.composeui.views.components.speedlimit.SignageStyle
+import com.stadiamaps.ferrostar.maplibreui.camera.ChinaMapViewCameraDefaults
 import com.stadiamaps.ferrostar.maplibreui.helper.getNextCamera
+import com.stadiamaps.ferrostar.maplibreui.helper.getNextCameraState
 import com.stadiamaps.ferrostar.maplibreui.helper.rememberLocationPermissionLauncher
 import com.stadiamaps.ferrostar.maplibreui.helper.rememberSynchronizedMapViewCamera
 import com.stadiamaps.ferrostar.maplibreui.views.DynamicallyOrientingNavigationView
@@ -100,7 +102,7 @@ fun EcoMapNavigationScene(
     val cameraPadding = CameraPadding.fractionOfScreen(top = 0.5f)
 
     val mapViewCamera = rememberSaveableMapViewCamera(
-        initialCamera =MapViewCamera.BoundingBox(AppModule.chinaBund)) // Or rememberMapViewCamera()
+        initialCamera =MapViewCamera.BoundingBox(ChinaMapViewCameraDefaults.BND_BOX)) // Or rememberMapViewCamera()
     val nextCameraState = getNextCamera(mapViewCamera.value.state)
     val permissionLauncher =
         rememberLocationPermissionLauncher(
@@ -120,11 +122,12 @@ fun EcoMapNavigationScene(
 
             }
         })
-    //val camera = rememberSaveableMapViewCamera(MapViewCamera.TrackingUserLocation())
+    val camera2 = rememberSaveableMapViewCamera(MapViewCamera.TrackingUserLocation())
+
   DynamicallyOrientingNavigationView(
       modifier = Modifier.fillMaxSize(),
       styleUrl = AppModule.mapStyleUrl, //MaplibreMap(baseStyle = BaseStyle.Uri(Res.getUri("files/style.json")))
-      camera = camera,
+      camera = getNextCameraState(mapViewCamera.value.state),
       viewModel = viewModel,
       // Configure speed limit signage based on user preference or location
       config = VisualNavigationViewConfig.Default().withSpeedLimitStyle(SignageStyle.MUTCD),

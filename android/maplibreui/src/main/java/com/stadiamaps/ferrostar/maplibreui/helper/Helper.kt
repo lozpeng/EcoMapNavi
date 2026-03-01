@@ -3,28 +3,31 @@ package com.stadiamaps.ferrostar.maplibreui.helper
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.maplibre.compose.camera.CameraState
 import com.maplibre.compose.camera.MapViewCamera
 import com.maplibre.compose.rememberSaveableMapViewCamera
+import com.stadiamaps.ferrostar.maplibreui.camera.ChinaMapViewCameraDefaults
 import org.maplibre.android.geometry.LatLngBounds
 
 fun getNextCamera(currentState: CameraState): MapViewCamera {
     return when (currentState) {
+        is CameraState.BoundingBox -> MapViewCamera.Centered(
+            ChinaMapViewCameraDefaults.LATITUDE_MAP_CENTER,
+            ChinaMapViewCameraDefaults.LONGITUDE_MAP_CENTER)
         is CameraState.TrackingUserLocationWithBearing ->
-            MapViewCamera.BoundingBox(
-                LatLngBounds.from(
-                    53.55,
-                    135.08,
-                    3.85,
-                    73.55
-                ))
-        is CameraState.BoundingBox -> MapViewCamera.Centered((34.0+32/60.0+27/3600.0),
-            (108+55/60.0+25/3600.0))
+            MapViewCamera.BoundingBox(ChinaMapViewCameraDefaults.BND_BOX)
         is CameraState.Centered -> MapViewCamera.TrackingUserLocation(zoom = 13.0, pitch = 45.0)
         is CameraState.TrackingUserLocation ->
             MapViewCamera.TrackingUserLocationWithBearing(zoom = 13.0, pitch = 45.0)
     }
-    //北纬34°32'27.00",东经108°55'25.00"
+}
+
+@Composable
+fun getNextCameraState(currentState: CameraState): MutableState<MapViewCamera>
+{
+    return rememberSaveable { mutableStateOf(getNextCamera(currentState)) }
 }
 
 @Composable
