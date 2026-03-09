@@ -85,6 +85,9 @@ class EcoMapNavigationViewModel(
 
   override fun onLocationUpdated(location: UserLocation) {
     locationStateFlow.update { location }
+
+
+
   }
 
   override fun onHeadingUpdated(heading: Heading) {

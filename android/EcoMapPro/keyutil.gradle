@@ -3,16 +3,16 @@ import org.gradle.internal.os.OperatingSystem
 
 rootProject.ext.keyStorePath = KeyStorePath()
 
-def keyStorePath()
+static def keyStorePath()
 {
     def windows  = 'F://Dev//MapLibre//Demos//EcoMapPro//keystore//ecomap.jks'
     def linux = '/media/lyj/新加卷-F盘/Dev/MapLibre/Demos/EcoMapPro/keystore/ecomap.jks'
     return isWindows()?windows : linux
 }
 
-def isWindows()
+static def isWindows()
 {
-    return org.gradle.internal.os.OperatingSystem.current().isWindows();
+    return OperatingSystem.current().isWindows();
 }
 
 def keyStorePath2()
