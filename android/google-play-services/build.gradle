@@ -1,16 +1,14 @@
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
-import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
     alias libs.plugins.androidLibrary
-    alias libs.plugins.jetbrainsKotlinAndroid
     alias libs.plugins.ktfmt
     alias libs.plugins.mavenPublish
 }
 
 android {
     namespace 'com.stadiamaps.ferrostar.googleplayservices'
-    compileSdk 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk 25
@@ -23,9 +21,6 @@ android {
         coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = '1.8'
     }
 }
 
@@ -46,7 +41,7 @@ dependencies {
 }
 
 mavenPublishing {
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    publishToMavenCentral()
     if (!project.hasProperty(SKIP_SIGNING_PROPERTY)) {
         signAllPublications()
     }

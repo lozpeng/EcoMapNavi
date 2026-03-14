@@ -1,8 +1,10 @@
+import org.gradle.api.Project
+import org.gradle.process.ExecOperations
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     alias libs.plugins.androidApplication apply false
     alias libs.plugins.androidLibrary apply false
-    alias libs.plugins.jetbrainsKotlinAndroid apply false
     alias libs.plugins.cargo.ndk apply false
     alias libs.plugins.ktfmt apply false
     alias libs.plugins.paparazzi apply false
@@ -11,11 +13,21 @@ plugins {
     alias libs.plugins.kotlinSerialization apply false
 }
 
+// Gradle 9 removed `Project.exec(Closure)`; some third-party plugins still call it.
+// Provide a compatibility shim backed by `ExecOperations`.
+gradle.beforeProject { Project p ->
+    if (!p.metaClass.respondsTo(p, "exec", Closure)) {
+        p.metaClass.exec = { Closure c ->
+            p.services.get(ExecOperations).exec(c)
+        }
+    }
+}
+
 ext {
     SKIP_SIGNING_PROPERTY = "skip.signing"
 }
 
 allprojects {
     group = "com.stadiamaps.ferrostar"
-    version = "0.47.2"
+    version = "0.48.1"
 }
