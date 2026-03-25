@@ -14,8 +14,12 @@ dependencyResolutionManagement {
 }
 rootProject.name = 'Ferrostar'
 include ':core'
-include ':composeui'
+include ':ui-compose'
 include ':demo-app'
-include ':maplibreui'
+include ':ui-maplibre'
 include ':google-play-services'
-include ":EcoMapPro"
+include ':EcoMapPro'
+include ':ui-formatters'
+include ':ui-shared'
+include ':ui-maplibre-car-app'
+include ':car-app'
