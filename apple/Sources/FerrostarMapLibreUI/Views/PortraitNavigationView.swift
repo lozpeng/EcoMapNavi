@@ -16,9 +16,11 @@ public struct PortraitNavigationView: View {
     let styleURL: URL
     @Binding var camera: MapViewCamera
     let navigationCamera: MapViewCamera
+    let locationManagerConfiguration: NavigationLocationManagerConfiguration?
 
     private let navigationState: NavigationState?
     private let userLayers: [StyleLayerDefinition]
+    @State private var userTrackingMode: MLNUserTrackingMode = .followWithCourse
 
     let isMuted: Bool
     let onTapMute: () -> Void
@@ -46,6 +48,7 @@ public struct PortraitNavigationView: View {
         camera: Binding<MapViewCamera>,
         navigationCamera: MapViewCamera = .automotiveNavigation(),
         navigationState: NavigationState?,
+        locationManagerConfiguration: NavigationLocationManagerConfiguration? = nil,
         isMuted: Bool,
         minimumSafeAreaInsets: EdgeInsets = EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16),
         onTapMute: @escaping () -> Void,
@@ -54,6 +57,7 @@ public struct PortraitNavigationView: View {
     ) {
         self.styleURL = styleURL
         self.navigationState = navigationState
+        self.locationManagerConfiguration = locationManagerConfiguration
         self.isMuted = isMuted
         self.minimumSafeAreaInsets = minimumSafeAreaInsets
         self.onTapMute = onTapMute
@@ -72,6 +76,10 @@ public struct PortraitNavigationView: View {
                     styleURL: styleURL,
                     camera: $camera,
                     navigationState: navigationState,
+                    locationManagerConfiguration: locationManagerConfiguration,
+                    onUserTrackingModeChanged: { mode, _ in
+                        userTrackingMode = mode
+                    },
                     onStyleLoaded: { _ in
                         camera = navigationCamera
                     }
@@ -108,21 +116,20 @@ public struct PortraitNavigationView: View {
         }
     }
 
+    private var isNavigating: Bool {
+        navigationState?.isNavigating == true
+    }
+
     private var cameraControlState: CameraControlState {
-        if navigationState?.isNavigating != true {
-            return .hidden
-        }
-        if camera.isTrackingUserLocationWithCourse {
-            guard let overviewCamera = navigationState?.routeOverviewCamera else {
-                return .hidden
-            }
-            return .showRouteOverview {
-                camera = overviewCamera
-            }
-        }
-        return .showRecenter {
-            camera = navigationCamera
-        }
+        NavigationCameraControlResolver(
+            isNavigating: isNavigating,
+            camera: camera,
+            userTrackingMode: userTrackingMode,
+            navigationCamera: navigationCamera,
+            routeOverviewCamera: navigationState?.routeOverviewCamera,
+            setCamera: { camera = $0 }
+        )
+        .cameraControlState()
     }
 }
 
