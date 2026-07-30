@@ -69,6 +69,7 @@ fun NavigationMapView(
     locationPuckStyle: NavigationMapPuckStyle = NavigationMapPuckStyle(),
     showDefaultPuck: Boolean = true,
     onMapLoadFinished: () -> Unit = {},
+    onMapReady: (org.maplibre.android.maps.MapView) -> Unit = {},
     onMapLoadFailed: (String?) -> Unit = {},
     onMapClick: NavigationMapClickHandler = { _, _ -> NavigationMapClickResult.Pass },
     onMapLongClick: NavigationMapClickHandler = { _, _ -> NavigationMapClickResult.Pass },
@@ -120,10 +121,9 @@ fun NavigationMapView(
         }
         onMapLoadFinished()
       },
-      options = mapOptions,
+  options = mapOptions,
   ) {
     routeOverlayBuilder?.navigationPath(uiState)
-
     if (showDefaultPuck) {
       if (shouldRenderNavigationPuck(uiState) && displayedNavigationLocation != null) {
         NavigationPuckOverlay(
