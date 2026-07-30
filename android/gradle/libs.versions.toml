@@ -15,7 +15,7 @@ androidx-car-app = "1.7.0"
 androidx-activity-compose = "1.13.0"
 compose = "2026.02.01"
 okhttp = "5.3.2"
-maplibre-compose = "0.13.0"
+maplibre-compose = "0.13.1"
 car-app-compose = "0.0.2"
 playServicesLocation = "21.3.0"
 junit = "4.13.2"
@@ -28,6 +28,9 @@ turbine = "1.2.1"
 mavenPublish = "0.36.0"
 material = "1.13.0"
 stadiaAutocompleteSearch = "3.0.0"
+
+combolite="2.0.2"
+combolite-aar2apk="1.1.1"
 
 [libraries]
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
@@ -77,6 +80,9 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 # Demo App
 stadiamaps-autocomplete-search = { group = "com.stadiamaps", name = "jetpack-compose-autocomplete", version.ref = "stadiaAutocompleteSearch" }
 
+#combolite
+combolite-core = { group = "io.github.lnzz123", name = "combolite-core", version.ref = "combolite" }
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
@@ -86,3 +92,6 @@ ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazzi" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+combolite-aar2apk = { id = "io.github.lnzz123.combolite-aar2apk", version.ref = "combolite-aar2apk" }
+

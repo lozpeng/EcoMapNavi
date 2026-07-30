@@ -13,6 +13,7 @@ plugins {
     alias libs.plugins.compose.compiler apply false
     alias libs.plugins.mavenPublish apply false
     alias libs.plugins.kotlinSerialization apply false
+    alias libs.plugins.combolite.aar2apk
 }
 
 // Gradle 9 removed `Project.exec(Closure)`; some third-party plugins still call it.
@@ -30,7 +31,7 @@ ext {
 }
 
 allprojects {
-    group = "com.stadiamaps.ferrostar"
+    group = "org.cwcc.open.eco"
     version = "0.53.0"
 }
 
@@ -54,5 +55,18 @@ subprojects { sp ->
         }
         sp.tasks.named('ktfmtCheck').configure { dependsOn checkSources }
         sp.tasks.named('ktfmtFormat').configure { dependsOn formatSources }
+    }
+}
+aar2apk {
+    modules {
+        //module(":plugins:common")
+        //module(":plugins:gnss")
+    }
+
+    signing {
+        keystorePath.set(rootProject.file("plugins/ecomap.jks").absolutePath)
+        keystorePassword.set("ani9772")
+        keyAlias.set("ecomap")
+        keyPassword.set("123456")
     }
 }

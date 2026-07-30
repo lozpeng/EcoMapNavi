@@ -12,10 +12,10 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = 'Ferrostar'
+rootProject.name = 'EcoMapNavi'
 include ':core'
 include ':ui-compose'
-include ':demo-app'
+include ':ecomap-app'
 include ':ui-maplibre'
 include ':google-play-services'
 include ':ui-formatters'

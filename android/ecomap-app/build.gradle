@@ -1,0 +1,107 @@
+import com.combo.aar2apk.PackageBuildType
+
+plugins {
+    alias libs.plugins.androidApplication
+    alias libs.plugins.ktfmt
+    alias libs.plugins.compose.compiler
+    //alias libs.plugins.combolite.aar2apk
+    id("io.github.lnzz123.combolite-aar2apk")
+}
+
+android {
+    namespace 'org.cwcc.open.eco'
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId "org.cwcc.open.eco"
+        // Most of Ferrostar can be used with minSdk 25. Car App requires 29
+        minSdk 29
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary true
+        }
+
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file("local.properties").newDataInputStream())
+
+        android.buildFeatures.buildConfig true
+        buildConfigField "String", "stadiaApiKey", "\"${properties.getProperty("stadiaApiKey")}\""
+        buildConfigField "String", "graphhopperApiKey", "\"${properties.getProperty("graphhopperApiKey")}\""
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    buildFeatures {
+        compose true
+    }
+    androidResources {
+        generateLocaleConfig true
+    }
+    packagingOptions {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+}
+// 配置插件自动集成功能，用于源码无缝调试
+packagePlugins {
+    // 启用后，上述声明的插件将在构建时自动打包进宿主 assets
+    enabled.set(true)
+    buildType.set(PackageBuildType.DEBUG) // 或 RELEASE
+    pluginsDir.set("debug_plugins")       // 插件在 assets 内的存放目录
+}
+
+dependencies {
+    // Temporary until we can drop support for API < 26
+    coreLibraryDesugaring libs.desugar.jdk.libs
+
+    implementation libs.androidx.ktx
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.activity.compose
+
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.graphics
+    implementation libs.androidx.compose.ui.tooling
+    implementation libs.androidx.compose.material3
+
+    implementation libs.androidx.car.app
+
+    implementation project(':core')
+    implementation project(':car-app')
+    implementation project(':google-play-services')
+    implementation project(':ui-compose')
+    implementation project(':ui-maplibre')
+    implementation project(':ui-maplibre-car-app')
+
+    implementation libs.maplibre.compose
+    implementation libs.car.app.compose
+
+    implementation platform(libs.okhttp.bom)
+    implementation libs.okhttp.core
+
+    implementation libs.play.services.location
+
+    implementation libs.stadiamaps.autocomplete.search
+
+    implementation libs.combolite.core
+
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.test.junit
+    androidTestImplementation libs.androidx.test.espresso
+    androidTestImplementation libs.androidx.compose.ui.test.junit4
+    debugImplementation libs.androidx.compose.ui.test.manifest
+}
