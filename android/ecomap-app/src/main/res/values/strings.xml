@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">生态智图-Navi</string>
+    <string name="app_name">生态智图</string>
     <string name="dropped_pin_title">添加标注</string>
     <string name="destination_coordinates">坐标: %1$s</string>
     <string name="start_navigation">开始导航</string>

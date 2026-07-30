@@ -34,7 +34,7 @@
             android:resource="@xml/automotive_app_desc" />
 
         <activity
-            android:name="org.cwcc.open.eco.MainActivity"
+            android:name="org.cwcc.open.eco.navi.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Ferrostar"
             android:windowSoftInputMode="adjustResize">
@@ -50,7 +50,7 @@
             android:foregroundServiceType="location" />
 
         <service
-            android:name="org.cwcc.open.eco.auto.DemoCarAppService"
+            android:name="org.cwcc.open.eco.navi.auto.DemoCarAppService"
             android:exported="true">
             <intent-filter>
                 <action android:name="androidx.car.app.CarAppService" />

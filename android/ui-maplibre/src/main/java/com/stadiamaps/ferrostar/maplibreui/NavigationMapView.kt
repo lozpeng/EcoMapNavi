@@ -103,7 +103,6 @@ fun NavigationMapView(
           }
         }
   }
-
   MaplibreMap(
       modifier = Modifier.fillMaxSize(),
       baseStyle = baseStyle,

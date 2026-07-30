@@ -64,9 +64,9 @@ aar2apk {
     }
 
     signing {
-        keystorePath.set(rootProject.file("plugins/ecomap.jks").absolutePath)
+        keystorePath.set(rootProject.file("plugins/ecomapnavi.keystore").absolutePath)
         keystorePassword.set("ani9772")
-        keyAlias.set("ecomap")
-        keyPassword.set("123456")
+        keyAlias.set("org.cwcc.open.eco")
+        keyPassword.set("ani9772")
     }
 }

@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace 'org.cwcc.open.eco'
+    namespace 'org.cwcc.open.eco.navi'
     compileSdk = 36
 
     defaultConfig {
-        applicationId "org.cwcc.open.eco"
+        applicationId "org.cwcc.open.eco.navi"
         // Most of Ferrostar can be used with minSdk 25. Car App requires 29
         minSdk 29
         targetSdk 36
