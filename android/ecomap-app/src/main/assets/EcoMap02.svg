@@ -1,0 +1,21 @@
+<svg width="580" height="400" xmlns="http://www.w3.org/2000/svg">
+ <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+
+ <g>
+  <title>background</title>
+  <rect x="-1" y="-1" width="582" height="402" id="canvas_background" fill="none"/>
+ </g>
+ <g>
+  <title>Layer 1</title>
+  <text font-weight="bold" stroke="#000" xml:space="preserve" text-anchor="start" font-family="Euphoria, sans-serif" font-size="92" id="svg_1" y="218.195094" x="34.262622" stroke-opacity="null" stroke-width="0" fill="#0ea8ef">Eco</text>
+  <text font-weight="bold" xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="92" id="svg_2" y="215.991729" x="406.892155" fill-opacity="null" stroke-opacity="null" stroke-width="0" stroke="#000" fill="#0ea8ef">ap</text>
+  <path stroke="#000" id="svg_4" d="m214,223.134809l69.500009,-138.000011l69.500009,138.000011l-139.000018,0z" stroke-opacity="null" stroke-width="0" fill="#0ea8ef"/>
+  <path id="svg_5" d="m279.997518,223.096766l50.500005,-112.000007l50.500005,112.000007l-101.00001,0z" stroke-opacity="null" stroke-width="0" stroke="#000" fill="#00ff00"/>
+  <path d="m224.5,169.925551c2,-1 2.069489,-2.960739 6,-10c6.108597,-10.940063 16.410141,-31.267784 23,-45c7.35498,-15.326591 8.50718,-21.08744 10.713235,-26c2.36029,-7.254898 6.246334,-17.954649 9.286765,-26c3.040431,-8.045351 5.321442,-14.190994 7,-11c2.50705,4.765991 6.939178,14.024757 9,19c2.914429,7.036057 4.337494,10.310005 6,13c2.230499,3.609009 5.473297,10.293663 9,16c2.628662,4.253258 1.948266,3.256584 5,8c6.229767,8.973251 7.458801,9.306564 8,8c0.541199,-1.306564 3.190277,-7.881523 5,-11l4,-8c1,-3 2.458801,-4.693436 3,-6c0.38269,-0.923882 1,-1 2,1c2,4 3.771942,7.119553 7,13c2.805908,5.111443 8.07193,12.95327 10,16c3.118103,4.927216 5.695923,10.159401 10,18c2.805908,5.11145 7.513,10.593994 9,13c1.662506,2.689987 2,2.58156 3,5l0.64539,2" id="svg_19" stroke-opacity="null" stroke-width="12" stroke="#0ea8ef" fill="none"/>
+  <path id="svg_20" d="m267.843242,82.352587" opacity="0.5" fill-opacity="null" stroke-opacity="null" stroke-width="12" stroke="#0ea8ef" fill="0ea8ef"/>
+  <line stroke="#0ea8ef" stroke-linecap="null" stroke-linejoin="null" id="svg_21" y2="281.426183" x2="104.950962" y1="280.935987" x1="27.990164" stroke-opacity="null" stroke-width="12" fill="0ea8ef"/>
+  <text stroke="#000" transform="matrix(0.40776931673746186,0,0,0.4490094528080971,-56.37304477231376,143.6516224875001) " xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="92" id="svg_22" y="333.955663" x="415.709358" stroke-opacity="null" stroke-width="0" fill="#ff7f00">野生动植物智慧保护</text>
+  <line stroke="#0ea8ef" stroke-linecap="null" stroke-linejoin="null" id="svg_23" y2="282.406576" x2="536.323582" y1="281.91638" x1="459.362784" stroke-opacity="null" stroke-width="12" fill="none"/>
+  <path stroke-width="0" fill="#0ea8ef" stroke="#000" id="svg_3" d="m498.910934,172.632814c-3.270312,0 -5.910937,2.548828 -5.910937,5.683593s2.640625,5.683593 5.910937,5.683593c3.260156,0 5.910937,-2.539062 5.910937,-5.683593s-2.650781,-5.683593 -5.910937,-5.683593zm-5.910937,-38.632811l0,9.091796c23.501562,0 42.54453,18.310546 42.54453,40.908201l9.455468,0c0,-27.617186 -23.278124,-49.999997 -51.999998,-49.999997zm0,18.183593l0,9.091796c13.050781,0 23.633593,10.175781 23.633593,22.724608l9.455468,0c0,-17.578124 -14.817968,-31.816405 -33.089061,-31.816405z"/>
+ </g>
+</svg>
