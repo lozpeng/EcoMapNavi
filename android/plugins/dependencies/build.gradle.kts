@@ -48,7 +48,7 @@ dependencies {
   api(libs.landscapist.placeholder)
   api(libs.landscapist.palette)
   // ⚠️ shimmer 未在 toml 定义，如需使用请补充（见下方）
-  // api(libs.shimmer)
+  api(libs.shimmer)
   api(libs.lottie)
   api(libs.coil.kt)
   api(libs.coil.okhttp)
@@ -58,24 +58,24 @@ dependencies {
 
   // ========== 网络和序列化 ==========
   // ⚠️ retrofit 相关库未在 toml 定义，如需使用请补充（见下方）
-  // api(platform(libs.retrofit.bom))
-  // api(libs.retrofit)
-  // api(libs.retrofit.kotlinx.serialization)
+  api(platform(libs.retrofit.bom))
+  api(libs.retrofit)
+  api(libs.retrofit.kotlinx.serialization)
   api(platform(libs.okhttp.bom))
   // logging-interceptor 版本由 okhttp-bom 管理
   api("com.squareup.okhttp3:logging-interceptor")
   // ⚠️ sandwich / converter.gson 未在 toml 定义
-  // api(libs.sandwich)
+   api(libs.sandwich)
   api(libs.kotlinx.serialization)
-  // api(libs.converter.gson)
+   api(libs.converter.gson)
 
   // ========== 工具库 ==========
   api(libs.timber)
   // ⚠️ accompanist.permissions 未在 toml 定义
-  // api(libs.accompanist.permissions)
+  api(libs.accompanist.permissions)
   api(libs.kotlinx.coroutines.android)
   // ⚠️ kotlinx-immutable-collection 未在 toml 定义
-  // api(libs.kotlinx.immutable.collection)
+   api(libs.kotlinx.immutable.collection)
 
   // ========== 数据库 ==========
   api(libs.androidx.room.runtime)
@@ -83,12 +83,15 @@ dependencies {
 
   // ========== 依赖注入 ==========
   // ⚠️ koin 未在 toml 定义，如需使用请补充（见下方）
-  // api(libs.koin.android)
-  // api(libs.koin.androidx.compose)
+   api(libs.koin.android)
+   api(libs.koin.androidx.compose)
 
   // ========== 其他常用库 ==========
-  // ❌ androidx.foundation.android 已从 toml 删除（与 BOM 冲突），请删除
-  // api(libs.androidx.foundation.android)
   // ⚠️ kotlin.reflect 未在 toml 定义
-  // api(libs.kotlin.reflect)
+   api(libs.kotlin.reflect)
+
+
+  ///==============maplbire native 地图
+  api(libs.maplibre.compose)
+  api(project(":ui-maplibre"))
 }

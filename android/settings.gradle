@@ -25,5 +25,5 @@ include ':car-app'
 
 include ':plugins:dependencies'
 //combolite plugins
-//include ':plugins:common'
+include ':plugins:common'
 

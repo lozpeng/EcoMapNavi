@@ -43,7 +43,7 @@ android {
 }
 
 dependencies {
-    implementation(projects.dependencies)
+    implementation project(':plugins:dependencies')
     // ========== 插件化框架接口 ==========
     // 插件核心库 远程依赖方式
     compileOnly(libs.combolite.core)
