@@ -12,7 +12,7 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = 'EcoMapNavi'
+rootProject.name = 'GeoKori'
 include ':core'
 include ':ui-compose'
 include ':ecomap-app'
@@ -22,3 +22,7 @@ include ':ui-formatters'
 include ':ui-shared'
 include ':ui-maplibre-car-app'
 include ':car-app'
+
+//combolite plugins
+
+
