@@ -38,7 +38,7 @@ dependencies {
     implementation platform(libs.kotlin.bom)
     implementation libs.androidx.appcompat
     implementation libs.androidx.activity.compose
-    implementation libs.androidx.lifecycle.runtime.compose.android
+    implementation libs.androidx.lifecycle.runtime.compose
     implementation libs.androidx.lifecycle.viewmodel.compose
 
     implementation platform(libs.androidx.compose.bom)

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -33,11 +34,11 @@ fun DestinationSelectionBottomSheet(
 ) {
   Box(
       modifier = Modifier.fillMaxSize().systemBarsPadding(),
-      contentAlignment = Alignment.BottomCenter,
+      contentAlignment = Alignment.BottomStart,
   ) {
     Surface(
-        modifier = Modifier.fillMaxWidth().onSizeChanged { onSheetHeightChanged(it.height) },
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        modifier = Modifier.width(500.dp).onSizeChanged { onSheetHeightChanged(it.height) },
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         tonalElevation = 8.dp,
         shadowElevation = 8.dp,
     ) {

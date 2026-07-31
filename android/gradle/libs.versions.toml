@@ -1,26 +1,25 @@
 [versions]
-agp = "9.0.1"
-kotlin = "2.3.20"
+agp = "9.1.0"           # 兼容 Gradle 9.2+，不用回退 Gradle
+kotlin = "2.3.20"       # 回退，避免 :core 编译失败
 cargo-ndk = "0.5.3"
 ktfmt = "0.26.0"
-androidx-lifecycle = "2.10.0"
+androidx-lifecycle = "2.10.0"   # 回退，兼容 compileSdk 36
 paparazzi = "2.0.0-alpha04"
 desugar_jdk_libs = "2.1.5"
-ktx = "1.17.0"
+ktx = "1.17.0"          # 回退，兼容 compileSdk 36
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
 kotlinx-serialization = "1.11.0"
 androidx-appcompat = "1.7.1"
 androidx-car-app = "1.7.0"
 androidx-activity-compose = "1.13.0"
-compose = "2026.02.01"
-okhttp = "5.3.2"
+compose = "2026.02.01"  # 保持原样
+okhttp = "5.3.2"        # 保持原样
 maplibre-compose = "0.13.1"
 car-app-compose = "0.0.2"
 playServicesLocation = "21.3.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
-junitCompose = "1.10.5"
 espressoCore = "3.7.0"
 okhttp-mock = "2.1.0"
 mockk = "1.14.9"
@@ -29,17 +28,14 @@ mavenPublish = "0.36.0"
 material = "1.13.0"
 stadiaAutocompleteSearch = "3.0.0"
 
-#combolite 扩展库
-foundationAndroid = "1.9.0"
-lifecycleProcess = "2.9.2"
+# combolite 扩展库 — 已清理冲突项，版本统一
+lifecycleProcess = "2.10.0"
 androidxRoom = "2.7.2"
 androidxNavigation = "2.9.3"
 material3AdaptiveNavigationSuite = "1.3.2"
 constraintlayout = "2.2.1"
-navigationFragmentKtx = "2.9.2"
-navigationUiKtx = "2.9.2"
-uiTooling = "1.4.0"
-coroutines = "1.10.2"
+navigationFragmentKtx = "2.9.3"
+navigationUiKtx = "2.9.3"
 androidxSavedstate = "1.3.1"
 
 timber = "5.0.1"
@@ -48,24 +44,29 @@ coil = "3.2.0"
 landscapist = "2.5.1"
 retrofit = "3.0.0"
 
-combolite="2.0.2"
-combolite-aar2apk="1.1.1"
+combolite = "2.0.2"
+combolite-aar2apk = "1.1.1"
 
 [libraries]
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
+
 # Kotlin & KotlinX
 kotlin-bom = { group = "org.jetbrains.kotlin", name = "kotlin-bom", version.ref = "kotlin" }
 kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
+
 # AndroidX
 androidx-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "ktx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "androidx-appcompat" }
-# AndroidX Lifecycle ViewModel Compose 库
+
+# AndroidX Lifecycle — 2.10.0 仍用 -android 后缀
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-runtime-compose-android = { module = "androidx.lifecycle:lifecycle-runtime-compose-android", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose-android", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
-# Jetpack Compose
+
+# Jetpack Compose — 全部由 BOM 管理，删除单独版本
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidx-activity-compose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
@@ -74,25 +75,31 @@ androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
-# Car App Library (for car-app module)
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+
+# Car App Library
 androidx-car-app = { group = "androidx.car.app", name = "app", version.ref = "androidx-car-app" }
+
 # Material
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-# OkHttp & Moshi
+
+# OkHttp
 okhttp-bom = { group = "com.squareup.okhttp3", name = "okhttp-bom", version.ref = "okhttp" }
 okhttp-core = { group = "com.squareup.okhttp3", name = "okhttp" }
 okhttp-mock = { group = "com.github.gmazzo", name = "okhttp-mock", version.ref = "okhttp-mock" }
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+
 # MapLibre
 maplibre-compose = { group = "org.maplibre.compose", name = "maplibre-compose-android", version.ref = "maplibre-compose" }
 car-app-compose = { group = "io.github.rallista", name = "car-app-compose", version.ref = "car-app-compose" }
-# Google Play Services (for Google module)
+
+# Google Play Services
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
+
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-test-espresso = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
-androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "junitCompose" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
@@ -100,43 +107,38 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 # Demo App
 stadiamaps-autocomplete-search = { group = "com.stadiamaps", name = "jetpack-compose-autocomplete", version.ref = "stadiaAutocompleteSearch" }
 
-#combolite
+# combolite
 combolite-core = { group = "io.github.lnzz123", name = "combolite-core", version.ref = "combolite" }
 
 lottie = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottie" }
-# 提供图片加载库Coil的核心功能
 coil-kt = { group = "io.coil-kt.coil3", name = "coil", version.ref = "coil" }
 coil-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 coil-kt-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-kt-svg = { group = "io.coil-kt.coil3", name = "coil-svg", version.ref = "coil" }
 coil-kt-gif = { group = "io.coil-kt.coil3", name = "coil-gif", version.ref = "coil" }
 
-# AndroidX Room 数据库相关库
+# Room
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidxRoom" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "androidxRoom" }
 
-# Landscapist 图片加载相关库
+# Landscapist
 landscapist-glide = { group = "com.github.skydoves", name = "landscapist-glide", version.ref = "landscapist" }
 landscapist-animation = { group = "com.github.skydoves", name = "landscapist-animation", version.ref = "landscapist" }
 landscapist-placeholder = { group = "com.github.skydoves", name = "landscapist-placeholder", version.ref = "landscapist" }
 landscapist-palette = { group = "com.github.skydoves", name = "landscapist-palette", version.ref = "landscapist" }
-# Timber 日志库
+
+# Timber
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 
-# 添加的ViewTreeLifecycleOwner、ViewTreeViewModelStoreOwner和ViewTreeSavedStateRegistryOwner相关库
+# SavedState
 androidx-savedstate-ktx = { group = "androidx.savedstate", name = "savedstate", version.ref = "androidxSavedstate" }
 
-
-# 构建逻辑相关依赖
-androidx-foundation-android = { group = "androidx.compose.foundation", name = "foundation-android", version.ref = "foundationAndroid" }
+# 构建逻辑相关 — 已移除与 BOM 冲突的 foundation-android 和 ui-tooling
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 androidx-material3-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite", version.ref = "material3AdaptiveNavigationSuite" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
 androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtx" }
-androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "uiTooling" }
-# Kotlinx 协程相关库
-kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -147,6 +149,6 @@ ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazzi" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-#combolite plugins
-combolite-aar2apk = { id = "io.github.lnzz123.combolite-aar2apk", version.ref = "combolite-aar2apk" }
 
+# combolite plugins
+combolite-aar2apk = { id = "io.github.lnzz123.combolite-aar2apk", version.ref = "combolite-aar2apk" }
