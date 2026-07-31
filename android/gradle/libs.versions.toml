@@ -27,6 +27,7 @@ turbine = "1.2.1"
 mavenPublish = "0.36.0"
 material = "1.13.0"
 stadiaAutocompleteSearch = "3.0.0"
+spotless="7.0.2"
 
 # combolite 扩展库 — 已清理冲突项，版本统一
 lifecycleProcess = "2.10.0"
@@ -149,6 +150,9 @@ ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazzi" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 
 # combolite plugins
 combolite-aar2apk = { id = "io.github.lnzz123.combolite-aar2apk", version.ref = "combolite-aar2apk" }
