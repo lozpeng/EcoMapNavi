@@ -24,6 +24,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Ferrostar"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
         <meta-data
@@ -34,7 +35,7 @@
             android:resource="@xml/automotive_app_desc" />
 
         <activity
-            android:name="org.cwcc.open.eco.navi.MainActivity"
+            android:name="org.cwcc.open.eco.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Ferrostar"
             android:windowSoftInputMode="adjustResize">
@@ -50,7 +51,7 @@
             android:foregroundServiceType="location" />
 
         <service
-            android:name="org.cwcc.open.eco.navi.auto.DemoCarAppService"
+            android:name="org.cwcc.open.eco.auto.DemoCarAppService"
             android:exported="true">
             <intent-filter>
                 <action android:name="androidx.car.app.CarAppService" />
