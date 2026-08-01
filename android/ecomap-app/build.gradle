@@ -4,8 +4,8 @@ plugins {
     alias libs.plugins.androidApplication
     alias libs.plugins.ktfmt
     alias libs.plugins.compose.compiler
-    //alias libs.plugins.combolite.aar2apk
-    id("io.github.lnzz123.combolite-aar2apk")
+    alias libs.plugins.combolite.aar2apk
+    //id("io.github.lnzz123.combolite-aar2apk")
 }
 
 android {
@@ -35,7 +35,8 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true        // 同时移除无用资源
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -77,6 +78,8 @@ dependencies {
     implementation libs.androidx.compose.ui.graphics
     implementation libs.androidx.compose.ui.tooling
     implementation libs.androidx.compose.material3
+    implementation libs.androidx.compose.material.icons.core     // 常用图标
+    implementation libs.androidx.compose.material.icons.extended  // 全部图标（含 Directions、AddLocation）
 
     implementation libs.androidx.car.app
 
@@ -96,8 +99,6 @@ dependencies {
     implementation libs.play.services.location
 
     implementation libs.stadiamaps.autocomplete.search
-
-    implementation libs.combolite.core
 
     testImplementation libs.junit
     androidTestImplementation libs.androidx.test.junit

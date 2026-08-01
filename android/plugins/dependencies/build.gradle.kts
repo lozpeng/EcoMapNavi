@@ -26,6 +26,8 @@ dependencies {
   api("androidx.compose.animation:animation")
   api("androidx.compose.material:material")
   api(libs.androidx.compose.material3)
+  api(libs.androidx.compose.material.icons.core)      // 常用图标
+  api(libs.androidx.compose.material.icons.extended)  // 全部图标（含 Directions、AddLocation）
   api("androidx.compose.foundation:foundation")
   api("androidx.compose.foundation:foundation-layout")
 

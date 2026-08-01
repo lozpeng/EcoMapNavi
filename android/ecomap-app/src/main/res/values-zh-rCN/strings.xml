@@ -3,7 +3,7 @@
     <string name="dropped_pin_title">添加标注</string>
     <string name="destination_coordinates">坐标: %1$s</string>
     <string name="start_navigation">开始导航</string>
-    <string name="add_geomarker">Add GeoMarker</string>
+    <string name="add_geomarker">添加地理标记</string>
     <string name="close_destination_sheet">关闭</string>
     <string name="center_on_my_location">我的位置</string>
     <string name="set_location_to_simulated">将位置设置为模拟</string>

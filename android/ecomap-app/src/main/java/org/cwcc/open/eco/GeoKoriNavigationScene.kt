@@ -160,6 +160,7 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
           onClose = { viewModel.clearSelectedDestination() },
           onStartNavigation = { viewModel.startSelectedDestinationNavigation() },
           onSheetHeightChanged = viewModel::setDestinationSheetHeight,
+          onAddGeoNote = { viewModel.addDestinationAsGeoNote(destination.coordinate) },
       )
     }
   }

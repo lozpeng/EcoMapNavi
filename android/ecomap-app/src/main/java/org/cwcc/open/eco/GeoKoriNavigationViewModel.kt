@@ -168,6 +168,12 @@ class DemoNavigationViewModel(
     }
     _sceneState.value = _sceneState.value.copy(destinationSheetHeightPx = heightPx)
   }
+  //将目的地添加为一个地理标记，即在此处记录某个事件：文字描述、语音、录像、照片
+  //建议弹出一个输入框，四个按钮，一个是输入文字描述、一个是录制语音（用户长按录入）、拍照、录像或拍照录像整合为一个
+  fun addDestinationAsGeoNote(destination: GeographicCoordinate)
+  {
+    //TODO：实现业务功能
+  }
 
   fun startSelectedDestinationNavigation() {
     val destination = sceneState.value.selectedDestination ?: return

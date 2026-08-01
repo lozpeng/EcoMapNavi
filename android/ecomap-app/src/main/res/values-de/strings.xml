@@ -4,6 +4,7 @@
     <string name="dropped_pin_title">Gesetzte Markierung</string>
     <string name="destination_coordinates">Koordinaten: %1$s</string>
     <string name="start_navigation">Navigation starten</string>
+    <string name="add_geomarker">Add GeoMarker</string>
     <string name="close_destination_sheet">Schließen</string>
     <string name="center_on_my_location">Auf meinen Standort zentrieren</string>
     <string name="set_location_to_simulated">Simulierten Standort verwenden</string>

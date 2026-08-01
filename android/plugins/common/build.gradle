@@ -45,7 +45,7 @@ android {
 dependencies {
     implementation project(':plugins:dependencies')
     // ========== 插件化框架接口 ==========
-    // 插件核心库 远程依赖方式
+    // 插件核心库 远程依赖方式, 插件模块必须使用 compileOnly，因为框架由宿主在运行时提供
     compileOnly(libs.combolite.core)
     // 插件核心库 本地依赖方式
     //compileOnly(projects.comboLiteCore)
