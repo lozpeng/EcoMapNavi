@@ -1,18 +1,4 @@
-/*
- * Copyright (c) 2025, 贵州君城网络科技有限公司
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 
 package com.combo.plugin.sample.example.viewmodel
 
@@ -23,10 +9,10 @@ import android.widget.Toast
 import androidx.lifecycle.viewModelScope
 import com.combo.core.runtime.PluginManager
 import com.combo.core.runtime.installer.InstallerManager
-import com.combo.plugin.sample.common.update.DownloadStatus
-import com.combo.plugin.sample.common.update.UpdateManager
-import com.combo.plugin.sample.common.update.model.PluginVersionInfo
-import com.combo.plugin.sample.common.viewmodel.BaseViewModel
+import org.cwcc.open.plugin.common.update.DownloadStatus
+import org.cwcc.open.plugin.common.update.UpdateManager
+import org.cwcc.open.plugin.common.update.model.PluginVersionInfo
+import org.cwcc.open.plugin.common.viewmodel.BaseViewModel
 import com.combo.plugin.sample.example.state.PluginUpdateState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch

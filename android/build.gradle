@@ -61,6 +61,7 @@ aar2apk {
     modules {
         module(":plugins:common")
         module(":plugins:home")
+        module(":plugins:geokori")
         module(":plugins:setting")
         module(":plugins:example")
     }

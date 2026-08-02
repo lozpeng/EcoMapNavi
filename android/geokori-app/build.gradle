@@ -48,6 +48,21 @@ android {
 //            }
 //        }
     }
+    signingConfigs {
+        var keyFile = file(rootProject.file("plugins/ecomap.jks").absolutePath)
+        debug {
+            storeFile keyFile
+            storePassword "ani9772"
+            keyAlias "ecomap"
+            keyPassword "123456"
+        }
+        release {
+            storeFile keyFile
+            storePassword "ani9772"
+            keyAlias "ecomap"
+            keyPassword "123456"
+        }
+    }
     compileOptions {
         coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -70,7 +85,7 @@ packagePlugins {
     // 启用后，上述声明的插件将在构建时自动打包进宿主 assets
     enabled.set(true)
     buildType.set(PackageBuildType.DEBUG) // 或 RELEASE
-    pluginsDir.set("plugins")       // 插件在 assets 内的存放目录
+    pluginsDir.set("debug_plugins")       // 插件在 assets 内的存放目录
 }
 
 dependencies {

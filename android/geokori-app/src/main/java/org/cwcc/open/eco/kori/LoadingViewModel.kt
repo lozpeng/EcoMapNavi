@@ -46,8 +46,8 @@ class LoadingViewModel(
 
     companion object {
         const val BASE_PATH = "plugins"
-        const val PLUGIN_COMMON = "com.combo.plugin.sample.common"
-        const val PLUGIN_HOME = "com.combo.plugin.sample.home"
+        const val PLUGIN_COMMON = "org.cwcc.open.plugin.common"
+        const val PLUGIN_HOME = "org.cwcc.open.plugin.home"
     }
 
     init {

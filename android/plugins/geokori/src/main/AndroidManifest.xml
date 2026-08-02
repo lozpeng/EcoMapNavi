@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.cwcc.open.plugin.geokori"
+    android:versionCode="2"
+    android:versionName="1.0.1">
+
+    <application
+        android:label="地图中心"
+        android:icon="@drawable/plugin_icon">
+        <meta-data
+            android:name="plugin.description"
+            android:value="地理日志模块，主要负责启动地图、导航等基本功能" />
+        <meta-data
+            android:name="plugin.entryClass"
+            android:value="org.cwcc.open.plugin.geokori.PluginEntryClass" />
+    </application>
+
+</manifest>

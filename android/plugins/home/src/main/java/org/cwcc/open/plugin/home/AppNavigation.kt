@@ -1,0 +1,54 @@
+package org.cwcc.open.plugin.home
+
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
+import org.cwcc.open.plugin.common.navigation.AppScreen
+import com.combo.plugin.sample.example.screen.ActivityScreen
+import com.combo.plugin.sample.example.screen.BroadcastReceiverScreen
+import com.combo.plugin.sample.example.screen.ContentProviderScreen
+import com.combo.plugin.sample.example.screen.PluginHotUpdateScreen
+import com.combo.plugin.sample.example.screen.ServiceScreen
+import com.combo.plugin.sample.example.screen.SoLibraryScreen
+import org.cwcc.open.plugin.home.screen.HomeScreen
+
+/**
+ * 在给定的 [NavGraphBuilder] 中定义应用的导航图。
+ * 此函数现在接收一个 SharedTransitionScope 实例作为参数，
+ * 允许在导航过程中使用共享过渡动画。
+ *
+ * @param sharedTransitionScope 用于实现共享元素过渡的上下文作用域。
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+fun NavGraphBuilder.appNavigation(sharedTransitionScope: SharedTransitionScope) {
+    with(sharedTransitionScope) {
+        composable<AppScreen.Home> {
+            HomeScreen()
+        }
+
+        composable<AppScreen.PluginActivity> {
+            ActivityScreen()
+        }
+
+        composable<AppScreen.PluginService> {
+            ServiceScreen()
+        }
+
+        composable<AppScreen.BroadcastReceiver> {
+            BroadcastReceiverScreen()
+        }
+
+        composable<AppScreen.ContentProvider> {
+            ContentProviderScreen()
+        }
+
+        composable<AppScreen.SoLibrary> {
+            SoLibraryScreen()
+        }
+
+        composable<AppScreen.PluginHotUpdate> {
+            PluginHotUpdateScreen()
+        }
+    }
+}

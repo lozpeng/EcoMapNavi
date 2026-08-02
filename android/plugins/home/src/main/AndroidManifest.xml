@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.combo.plugin.sample.home"
+    package="org.cwcc.open.plugin.home"
     android:versionCode="2"
     android:versionName="1.0.1">
 
@@ -10,9 +10,9 @@
         android:icon="@drawable/plugin_icon">
         <meta-data
             android:name="plugin.description"
-            android:value="首页模块插件，提供宿主应用的首页页面，负责为guide、example、setting这三个插件模块切换导航。注意：该版本插件不再兼容ComboLite插件框架核心库版本低于2.0.0的宿主应用" />
+            android:value="首页模块插件，提供宿主应用的首页页面，负责初始化地图和导航基础功能" />
         <meta-data
             android:name="plugin.entryClass"
-            android:value="com.combo.plugin.sample.home.PluginEntryClass" />
+            android:value="org.cwcc.open.plugin.home.PluginEntryClass" />
     </application>
 </manifest>

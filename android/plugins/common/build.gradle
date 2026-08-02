@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.combo.plugin.sample.common"
+    namespace = "org.cwcc.open.plugin.common"
     compileSdk = 36
 
     defaultConfig {
