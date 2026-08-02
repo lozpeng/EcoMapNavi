@@ -1,6 +1,7 @@
 package org.cwcc.open.plugin.geokori
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import com.combo.core.api.IPluginEntryClass
 import com.combo.core.model.PluginContext
 import org.koin.core.module.Module

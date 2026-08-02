@@ -14,7 +14,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 26
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -29,21 +29,6 @@ android {
             )
         }
     }
-//    signingConfigs {
-//        var keyFile = file(rootProject.file("plugins/ecomap.jks").absolutePath)
-//        debug {
-//            storeFile keyFile
-//            storePassword "ani9772"
-//            keyAlias "ecomap"
-//            keyPassword "123456"
-//        }
-//        release {
-//            storeFile keyFile
-//            storePassword "ani9772"
-//            keyAlias "ecomap"
-//            keyPassword "123456"
-//        }
-//    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8

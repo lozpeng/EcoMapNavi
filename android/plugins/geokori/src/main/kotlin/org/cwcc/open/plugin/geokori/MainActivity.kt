@@ -1,0 +1,94 @@
+package org.cwcc.open.plugin.geokori
+
+import android.os.Build
+import android.os.Bundle
+import android.speech.tts.TextToSpeech
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.Surface
+import com.combo.core.component.activity.BasePluginActivity
+import com.stadiamaps.ferrostar.core.AndroidTtsStatusListener
+import org.cwcc.open.plugin.geokori.ui.theme.FerrostarTheme
+import java.util.Locale
+import timber.log.Timber
+import uniffi.ferrostar.createFerrostarLogger
+
+class MainActivity : BasePluginActivity(), AndroidTtsStatusListener {
+  companion object {
+    private const val TAG = "MainActivity"
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+
+    // Don't forget to clean up!
+    AppModule.ttsObserver.shutdown()
+  }
+
+  override fun onStart() {
+    super.onStart()
+
+    // Start the TTS engine. This ensures that after onDestroy, a new instance is created.
+    AppModule.ttsObserver.start()
+  }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    // Set up the App Module
+    AppModule.init(proxyActivity!!)
+
+    // Set up text-to-speech for spoken instructions. This is a pretty "default" setup.
+    // Most Android apps will want to set this up. TTS setup is *not* automatic.
+    //
+    // Be sure to read the class docs for further setup details.
+    //
+    // NOTE: We can't set this property in the same way as we do the core, because the context will
+    // not be initialized yet, but the language won't save us from doing it anyways. This will
+    // result in a confusing NPE.
+    AppModule.ttsObserver.statusObserver = this
+    AppModule.ferrostarCore.spokenInstructionObserver = AppModule.ttsObserver
+
+    // Set up the location provider
+    //    AppModule.locationProvider.lastLocation = initialSimulatedLocation
+    //    AppModule.locationProvider.warpFactor = 2u
+
+    // Setup the global Ferrostar logger
+    createFerrostarLogger()
+
+    // Edge to edge (this will be default in Android 15)
+    // See https://developer.android.com/codelabs/edge-to-edge#0
+    // How to: https://developer.android.com/develop/ui/compose/layouts/insets#insets-setup
+    // IMPORTANT: If you use installSplashScreen(), you must call it before enableEdgeToEdge().
+    proxyActivity?.enableEdgeToEdge()
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      proxyActivity?.window?.isNavigationBarContrastEnforced = false
+    }
+    proxyActivity?.setContent {
+      FerrostarTheme {
+        // A surface container using the 'background' color from the theme
+        Surface { DemoNavigationScene() }
+      }
+    }
+  }
+  // TTS listener methods
+
+  override fun onTtsInitialized(tts: TextToSpeech?, status: Int) {
+    // Set this up as appropriate for your app
+    if (tts != null) {
+      tts.language = Locale.CHINESE
+      Timber.i("setLanguage status: $status")
+    } else {
+      Timber.e("TTS setup failed! $status")
+    }
+  }
+
+  override fun onTtsSpeakError(utteranceId: String, status: Int) {
+    Timber.e("Something went wrong synthesizing utterance $utteranceId. Status code: $status.")
+  }
+
+  override fun onTtsShutdownAndRelease() {
+    Timber.e("TTS shutdown and release. After this point you must call start() again.")
+  }
+}

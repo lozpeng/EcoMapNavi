@@ -13,6 +13,24 @@
         <meta-data
             android:name="plugin.entryClass"
             android:value="org.cwcc.open.plugin.geokori.PluginEntryClass" />
-    </application>
 
+        <!--地图导航所需的服务-->
+        <service
+            android:name="com.stadiamaps.ferrostar.core.service.FerrostarForegroundService"
+            android:foregroundServiceType="location" />
+
+        <service
+            android:name="org.cwcc.open.plugin.geokori.auto.DemoCarAppService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.car.app.CarAppService" />
+                <category android:name="androidx.car.app.category.NAVIGATION" />
+            </intent-filter>
+        </service>
+    </application>
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
 </manifest>
