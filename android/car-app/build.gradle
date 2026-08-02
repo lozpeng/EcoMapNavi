@@ -45,8 +45,8 @@ dependencies {
     implementation libs.kotlinx.coroutines
 
     implementation project(':core')
-    implementation project(':ui-formatters')
-    implementation project(':ui-shared')
+    implementation project(':ui:ui-formatters')
+    implementation project(':ui:ui-shared')
 
     testImplementation libs.junit
     androidTestImplementation libs.androidx.test.junit

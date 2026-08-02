@@ -1,0 +1,54 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.compose.compiler)        // toml 中别名是 compose-compiler
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.kotlinSerialization)
+}
+
+android {
+    namespace = "com.combo.plugin.sample.home"
+    compileSdk = 36
+
+    defaultConfig {
+        minSdk = 24
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // 为未使用的资源生成R类
+            shrinkResources false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlin {
+        compilerOptions {
+            //jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+    compileOnly project(':plugins:dependencies')
+    compileOnly project(':plugins:common')
+    compileOnly project(':plugins:setting')
+    compileOnly project(':plugins:example')
+    // ========== 插件化框架接口 ==========
+    // 插件核心库 远程依赖方式, 插件模块必须使用 compileOnly，因为框架由宿主在运行时提供
+    compileOnly(libs.combolite.core)
+}

@@ -1,0 +1,73 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.compose.compiler)        // toml 中别名是 compose-compiler
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.kotlinSerialization)
+}
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localProperties.load(new FileInputStream(localPropertiesFile))
+}
+
+def sdkDir = localProperties.getProperty('sdk.dir')?.trim()
+
+android {
+    namespace = "com.combo.plugin.sample.example"
+    compileSdk = 36
+    ndkVersion "27.2.12479018"
+
+    if (sdkDir) {
+        def ndkPathValue = sdkDir.endsWith(ndkVersion) \
+            ? sdkDir \
+            : sdkDir.replaceAll(/[\\\/]+$/, '') +File.separator+"ndk"+ File.separator + ndkVersion
+
+        //ndkPath ndkPathValue
+        println ">>> NDK Path resolved: ${ndkPathValue}"
+    }
+
+    defaultConfig {
+        minSdk = 24
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled  false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlin {
+        compilerOptions {
+            //jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+    buildFeatures {
+        compose = true
+        viewBinding = true
+    }
+    externalNativeBuild {
+        cmake {
+            path("src/main/cpp/CMakeLists.txt")
+        }
+    }
+}
+
+dependencies {
+    compileOnly project(':plugins:common')
+    compileOnly project(':plugins:dependencies')
+    // ========== 插件化框架接口 ==========
+    // 插件核心库 远程依赖方式, 插件模块必须使用 compileOnly，因为框架由宿主在运行时提供
+    compileOnly(libs.combolite.core)
+}

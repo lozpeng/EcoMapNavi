@@ -59,8 +59,10 @@ subprojects { sp ->
 }
 aar2apk {
     modules {
-        //module(":plugins:common")
-        //module(":plugins:gnss")
+        module(":plugins:common")
+        module(":plugins:home")
+        module(":plugins:setting")
+        module(":plugins:example")
     }
 
     signing {
