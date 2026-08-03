@@ -17,7 +17,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND
 import com.combo.core.runtime.PluginManager
 import org.cwcc.open.plugin.common.component.EmptyPage
 import org.cwcc.open.plugin.home.state.PluginStatus
@@ -49,7 +53,7 @@ import org.koin.androidx.compose.koinViewModel
 fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.GeoKori) }
 
     // 监听错误消息
     LaunchedEffect(state.isError, state.errorMessage) {
@@ -57,26 +61,31 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
             Toast.makeText(context, state.errorMessage, Toast.LENGTH_LONG).show()
         }
     }
-
+    val isWidScreen = currentWindowAdaptiveInfo().windowSizeClass.isWidthAtLeastBreakpoint( WIDTH_DP_EXPANDED_LOWER_BOUND)
     NavigationSuiteScaffold(
         navigationSuiteItems = {
-            AppDestinations.entries.forEach {
-                item(
-                    icon = {
-                        Icon(
-                            it.icon,
-                            contentDescription = it.label,
-                        )
-                    },
-                    label = { Text(it.label) },
-                    selected = it == currentDestination,
-                    onClick = { currentDestination = it },
-                )
-            }
+          AppDestinations.entries.forEach {
+            item(
+                icon = {
+                  Icon(
+                      it.icon,
+                      contentDescription = it.label,
+                  )
+                },
+                label = { Text(it.label) },
+                selected = it == currentDestination,
+                onClick = { currentDestination = it },
+            )
+          }
+        },
+        layoutType = if (isWidScreen) {
+          NavigationSuiteType.NavigationDrawer
+        } else {
+          NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
         },
     ) {
         when (currentDestination) {
-            AppDestinations.HOME -> PluginScreenContent(
+            AppDestinations.GeoKori -> PluginScreenContent(
                 pluginId = HomeViewModel.PLUGIN_GEOKORI,
                 viewModel = viewModel
             )
@@ -179,7 +188,8 @@ enum class AppDestinations(
     val label: String,
     val icon: ImageVector,
 ) {
-    HOME("地图", Icons.Default.Home),
+    GeoKori("地图", Icons.Default.Home),
     SAMPLE("示例", Icons.Default.Star),
     SETTING("设置", Icons.Default.Settings),
 }
+

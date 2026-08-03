@@ -18,6 +18,17 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+
+        vectorDrawables {
+            useSupportLibrary true
+        }
+
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file("local.properties").newDataInputStream())
+
+        android.buildFeatures.buildConfig true
+        buildConfigField "String", "stadiaApiKey", "\"${properties.getProperty("stadiaApiKey")}\""
+        buildConfigField "String", "graphhopperApiKey", "\"${properties.getProperty("graphhopperApiKey")}\""
     }
 
     buildTypes {
