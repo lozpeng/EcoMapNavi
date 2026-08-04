@@ -10,7 +10,7 @@ interface ApiService {
     /**
      * 获取插件配置文件
      */
-    @GET("lnzz123/combolite/main/updates/plugins.json")
+    @GET("geokori/plugins.json")
     suspend fun fetchPluginConfig(): PluginConfig
 
     /**

@@ -1,11 +1,17 @@
 package org.cwcc.open.plugin.home.screen
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -25,7 +31,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,6 +49,8 @@ import org.cwcc.open.plugin.home.viewmodel.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.cwcc.open.plugin.common.navigation.NavigationAnimations.fadeIn
+import org.cwcc.open.plugin.common.navigation.NavigationAnimations.fadeOut
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -51,58 +61,104 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
-    val state by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.GeoKori) }
+  val state by viewModel.uiState.collectAsState()
+  val context = LocalContext.current
+  var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.GeoKori) }
 
-    // 监听错误消息
-    LaunchedEffect(state.isError, state.errorMessage) {
-        if (state.isError && state.errorMessage != null) {
-            Toast.makeText(context, state.errorMessage, Toast.LENGTH_LONG).show()
-        }
+  // 面板状态
+  val sheetState = rememberImmersiveSheetState(SheetAnchor.PEEK)  // 默认 PEEK（显示底部快捷栏）
+  var sheetProgress by remember { mutableFloatStateOf(0f) }
+  var selectedPoi by remember { mutableStateOf<PoiItem?>(null) }
+
+  // 监听错误消息
+  LaunchedEffect(state.isError, state.errorMessage) {
+    if (state.isError && state.errorMessage != null) {
+      Toast.makeText(context, state.errorMessage, Toast.LENGTH_LONG).show()
     }
-    val isWidScreen = currentWindowAdaptiveInfo().windowSizeClass.isWidthAtLeastBreakpoint( WIDTH_DP_EXPANDED_LOWER_BOUND)
-    NavigationSuiteScaffold(
-        navigationSuiteItems = {
-          AppDestinations.entries.forEach {
-            item(
-                icon = {
-                  Icon(
-                      it.icon,
-                      contentDescription = it.label,
-                  )
-                },
-                label = { Text(it.label) },
-                selected = it == currentDestination,
-                onClick = { currentDestination = it },
-            )
+  }
+
+  val isWidScreen = currentWindowAdaptiveInfo().windowSizeClass.isWidthAtLeastBreakpoint(
+      WIDTH_DP_EXPANDED_LOWER_BOUND
+  )
+
+  NavigationSuiteScaffold(
+      navigationSuiteItems = {
+        AppDestinations.entries.forEach {
+          item(
+              icon = { Icon(it.icon, contentDescription = it.label) },
+              label = { Text(it.label) },
+              selected = it == currentDestination,
+              onClick = { currentDestination = it },
+          )
+        }
+      },
+      layoutType = if (isWidScreen) {
+        NavigationSuiteType.NavigationDrawer
+      } else {
+        NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
+      },
+  ) {
+    // ✅ 关键：在 NavigationSuiteScaffold 的 content 内部用 Box 包裹
+    Box(modifier = Modifier.fillMaxSize()) {
+      // 1. 最底层：地图/插件内容
+      when (currentDestination) {
+        AppDestinations.GeoKori -> PluginScreenContent(
+            pluginId = HomeViewModel.PLUGIN_GEOKORI,
+            viewModel = viewModel
+        )
+        AppDestinations.SAMPLE -> PluginScreenContent(
+            pluginId = HomeViewModel.PLUGIN_EXAMPLE,
+            viewModel = viewModel
+        )
+        AppDestinations.SETTING -> PluginScreenContent(
+            pluginId = HomeViewModel.PLUGIN_SETTING,
+            viewModel = viewModel
+        )
+      }
+
+      // 2. 覆盖层：底部沉浸式面板
+      ImmersiveBottomSheet(
+          sheetState = sheetState,
+          onSheetProgress = { sheetProgress = it },
+          onAnchorChanged = { anchor ->
+            if (anchor == SheetAnchor.COLLAPSED) {
+              selectedPoi = null
+            }
           }
-        },
-        layoutType = if (isWidScreen) {
-          NavigationSuiteType.NavigationDrawer
-        } else {
-          NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
-        },
-    ) {
-        when (currentDestination) {
-            AppDestinations.GeoKori -> PluginScreenContent(
-                pluginId = HomeViewModel.PLUGIN_GEOKORI,
-                viewModel = viewModel
-            )
+      ) {
+        BottomSheetContentV2(
+            progress = sheetProgress,
+            sheetState = sheetState,
+            onPoiClick = { poi ->
+              selectedPoi = poi
+            }
+        )
+      }
 
-            AppDestinations.SAMPLE -> PluginScreenContent(
-                pluginId = HomeViewModel.PLUGIN_EXAMPLE,
-                viewModel = viewModel
-            )
-
-            AppDestinations.SETTING -> PluginScreenContent(
-                pluginId = HomeViewModel.PLUGIN_SETTING,
-                viewModel = viewModel
-            )
+      // 3. POI 详情浮层（点击列表项后弹出）
+      AnimatedVisibility(
+          visible = selectedPoi != null && sheetState.currentAnchor != SheetAnchor.EXPANDED,
+          enter = slideInVertically { it } + fadeIn(),
+          exit = slideOutVertically { it } + fadeOut(),
+          modifier = Modifier.align(Alignment.BottomCenter)
+      ) {
+        selectedPoi?.let { poi ->
+          PoiDetailCardV2(
+              poi = poi,
+              onClose = { selectedPoi = null },
+              onNavigate = {
+                // 触发导航逻辑
+              },
+              modifier = Modifier
+                  .padding(horizontal = 12.dp)
+                  .padding(bottom = 240.dp)
+                  .fillMaxWidth()
+          )
         }
+      }
     }
+  }
 }
-
 /**
  * 插件页面的通用内容布局
  */

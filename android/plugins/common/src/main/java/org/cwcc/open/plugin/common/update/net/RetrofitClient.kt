@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    private const val BASE_URL = "https://raw.githubusercontent.com/"
+    private const val BASE_URL = "http://8.152.157.180/"
 
     val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
