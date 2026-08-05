@@ -164,88 +164,87 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
  */
 @Composable
 private fun PluginScreenContent(pluginId: String, viewModel: HomeViewModel) {
-    val state by viewModel.uiState.collectAsState()
+  val state by viewModel.uiState.collectAsState()
 
-    val entryClass = when (pluginId) {
-        HomeViewModel.PLUGIN_GEOKORI -> state.guideEntryClass
-        HomeViewModel.PLUGIN_EXAMPLE -> state.exampleEntryClass
-        HomeViewModel.PLUGIN_SETTING -> state.settingEntryClass
-        else -> null
+  val entryClass = when (pluginId) {
+    HomeViewModel.PLUGIN_GEOKORI -> state.guideEntryClass
+    HomeViewModel.PLUGIN_EXAMPLE -> state.exampleEntryClass
+    HomeViewModel.PLUGIN_SETTING -> state.settingEntryClass
+    else -> null
+  }
+
+  when {
+    // 1. 检查是否下载失败
+    state.failedDownloads.contains(pluginId) -> {
+      Column(
+          modifier = Modifier.fillMaxSize(),
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.Center,
+      ) {
+        Text("插件[$pluginId]下载失败！")
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { viewModel.retryDownload(pluginId) }) {
+          Text("重试")
+        }
+      }
     }
 
-    when {
-        // 1. 检查是否下载失败
-        state.failedDownloads.contains(pluginId) -> {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text("插件[$pluginId]下载失败！")
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = { viewModel.retryDownload(pluginId) }) {
-                    Text("重试")
+    // 2. 检查是否正在下载
+    state.downloadingPlugins.containsKey(pluginId) -> {
+      val progress = state.downloadingPlugins[pluginId] ?: 0f
+      Column(
+          modifier = Modifier.fillMaxSize(),
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.Center,
+      ) {
+        CircularProgressIndicator()
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(text = "下载中... ${(progress * 100).toInt()}%")
+        Spacer(modifier = Modifier.height(8.dp))
+        LinearProgressIndicator(progress = { progress }, modifier = Modifier.width(200.dp))
+      }
+    }
+
+    // 3. 显示正常状态
+    else -> {
+      val pluginStatus = viewModel.getPluginStatus(pluginId)
+      EmptyPage(
+          entryClass = entryClass,
+          message =
+              when (pluginStatus) {
+                PluginStatus.NOT_INSTALLED -> "插件[$pluginId]未安装"
+                PluginStatus.INSTALLED_NOT_STARTED -> "插件[$pluginId]未启动"
+                PluginStatus.INSTALLED_AND_STARTED -> "插件[$pluginId]已启动"
+              },
+          buttonText =
+              when (pluginStatus) {
+                PluginStatus.NOT_INSTALLED -> "下载并安装最新插件"
+                PluginStatus.INSTALLED_NOT_STARTED -> "启动插件"
+                PluginStatus.INSTALLED_AND_STARTED -> "进入插件"
+              },
+          onButtonClick = {
+            when (pluginStatus) {
+              PluginStatus.NOT_INSTALLED -> {
+                viewModel.installLatestPlugin(pluginId)
+              }
+
+              else -> {
+                CoroutineScope(Dispatchers.Main).launch {
+                  PluginManager.launchPlugin(pluginId)
                 }
+              }
             }
-        }
-
-        // 2. 检查是否正在下载
-        state.downloadingPlugins.containsKey(pluginId) -> {
-            val progress = state.downloadingPlugins[pluginId] ?: 0f
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                CircularProgressIndicator()
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(text = "下载中... ${(progress * 100).toInt()}%")
-                Spacer(modifier = Modifier.height(8.dp))
-                LinearProgressIndicator(progress = { progress }, modifier = Modifier.width(200.dp))
-            }
-        }
-
-        // 3. 显示正常状态
-        else -> {
-            val pluginStatus = viewModel.getPluginStatus(pluginId)
-            EmptyPage(
-                entryClass = entryClass,
-                message =
-                    when (pluginStatus) {
-                        PluginStatus.NOT_INSTALLED -> "插件[$pluginId]未安装"
-                        PluginStatus.INSTALLED_NOT_STARTED -> "插件[$pluginId]未启动"
-                        PluginStatus.INSTALLED_AND_STARTED -> "插件[$pluginId]已启动"
-                    },
-                buttonText =
-                    when (pluginStatus) {
-                        PluginStatus.NOT_INSTALLED -> "下载并安装最新插件"
-                        PluginStatus.INSTALLED_NOT_STARTED -> "启动插件"
-                        PluginStatus.INSTALLED_AND_STARTED -> "进入插件"
-                    },
-                onButtonClick = {
-                    when (pluginStatus) {
-                        PluginStatus.NOT_INSTALLED -> {
-                            viewModel.installLatestPlugin(pluginId)
-                        }
-
-                        else -> {
-                            CoroutineScope(Dispatchers.Main).launch {
-                                PluginManager.launchPlugin(pluginId)
-                            }
-                        }
-                    }
-                },
-            )
-        }
+          },
+      )
     }
+  }
 }
 
 enum class AppDestinations(
     val label: String,
     val icon: ImageVector,
 ) {
-    GeoKori("地图", Icons.Default.Home),
-    SAMPLE("示例", Icons.Default.Star),
-    SETTING("设置", Icons.Default.Settings),
+  GeoKori("地图", Icons.Default.Home),
+  SAMPLE("示例", Icons.Default.Star),
+  SETTING("设置", Icons.Default.Settings),
 }
-

@@ -13,10 +13,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -68,7 +68,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
@@ -129,12 +128,18 @@ fun ImmersiveBottomSheet(
   val scope = rememberCoroutineScope()
   val offsetY = sheetState.offset
 
+  // progress: 0=折叠, 1=展开
   val progress by remember {
     derivedStateOf {
       val current = offsetY.value
       val range = expandedPx - collapsedPx
-      if (range <= 0) 0f else 1f - ((current - collapsedPx) / range).coerceIn(0f, 1f)
+      if (range <= 0) 0f else ((current - collapsedPx) / range).coerceIn(0f, 1f)
     }
+  }
+
+  // 面板高度 = 可见高度（从底部向上展开的高度）
+  val sheetHeightDp by remember {
+    derivedStateOf { with(density) { offsetY.value.toDp() } }
   }
 
   LaunchedEffect(progress) {
@@ -200,12 +205,10 @@ fun ImmersiveBottomSheet(
     )
   }
 
-  // 遮罩透明度：只在 HALF 和 EXPANDED 时明显出现，PEEK 时几乎不可见
   val scrimAlpha by remember { derivedStateOf { progress * 0.35f } }
 
   Box(modifier = modifier.fillMaxSize()) {
-    // ==================== 修复点 1：遮罩层 ====================
-    // 只有当进度大于阈值时才真正"存在"并拦截事件
+    // 遮罩层：只在展开时渲染，避免拦截地图事件
     if (scrimAlpha > 0.01f) {
       Box(
           modifier = Modifier
@@ -216,7 +219,6 @@ fun ImmersiveBottomSheet(
                   interactionSource = remember { MutableInteractionSource() },
                   indication = null
               ) {
-                // 点击遮罩收起面板
                 sheetState.currentAnchor = SheetAnchor.PEEK
                 onAnchorChanged(SheetAnchor.PEEK)
                 scope.launch {
@@ -226,18 +228,21 @@ fun ImmersiveBottomSheet(
       )
     }
 
-    // 面板内容
+    // ✅ 关键修复：使用 align(Alignment.BottomCenter) 替代 graphicsLayer
+    // 面板真正布局在屏幕底部，高度变化实现展开/收起
+    // 布局位置与视觉位置完全一致，点击事件正常传递
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .graphicsLayer {
-              translationY = offsetY.value
-            }
+            .height(sheetHeightDp)
+            .align(Alignment.BottomCenter)      // ← 真正贴在父 Box 底部
             .then(dragModifier)
-            .shadow(elevation = (8 + progress * 8).dp, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            .shadow(
+                elevation = (8 + progress * 8).dp,
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+            )
             .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
             .background(Color(0xFFF8F9FA))
-            .heightIn(min = 0.dp, max = with(density) { expandedPx.toDp() })
     ) {
       content()
     }
@@ -355,8 +360,6 @@ fun WeatherChip(icon: ImageVector, text: String, bg: Color) {
   }
 }
 
-
-
 // ==================== 底部面板内容 V2（联动版）====================
 @Composable
 fun BottomSheetContentV2(
@@ -366,12 +369,19 @@ fun BottomSheetContentV2(
 ) {
   val scope = rememberCoroutineScope()
 
-  Column(modifier = Modifier.fillMaxWidth()) {
-    // 拖拽指示条 + 快捷操作（在折叠态也可见）
+  // ✅ Column 填满整个面板高度，LazyColumn 用 weight 自适应
+  Column(
+      modifier = Modifier
+          .fillMaxWidth()
+          .fillMaxHeight()
+  ) {
+    SearchHeaderV2()   // ← 加在这里
+    // 拖拽指示条
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp),
+        //.pointerInput(Unit) { /* 把 ImmersiveBottomSheet 里的 detectVerticalDragGestures 移到这里 */ },
         contentAlignment = Alignment.Center
     ) {
       Box(
@@ -383,7 +393,7 @@ fun BottomSheetContentV2(
       )
     }
 
-    // 快捷操作网格（随进度变化布局）
+    // 快捷操作（固定高度区域）
     AnimatedContent(
         targetState = progress > 0.3f,
         label = "quick_actions"
@@ -395,7 +405,7 @@ fun BottomSheetContentV2(
       }
     }
 
-    // 分割线（进度越大越明显）
+    // 分割线
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -405,7 +415,7 @@ fun BottomSheetContentV2(
             .background(Color(0xFFDADCE0))
     )
 
-    // 列表头部（带吸附效果）
+    // 列表头部
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -426,7 +436,7 @@ fun BottomSheetContentV2(
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    // 推荐列表
+    // ✅ 推荐列表：用 weight 占据剩余空间，不再用 heightIn
     val samplePois = remember {
       listOf(
           PoiItem("1", "星巴克咖啡", "餐饮", 4.8f, "120m", "建国路88号SOHO现代城", listOf("咖啡", "WiFi", "安静")),
@@ -439,7 +449,7 @@ fun BottomSheetContentV2(
     }
 
     LazyColumn(
-        modifier = Modifier.heightIn(max = 500.dp),
+        modifier = Modifier.weight(1f),   // ← 关键：自适应剩余高度
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
     ) {
