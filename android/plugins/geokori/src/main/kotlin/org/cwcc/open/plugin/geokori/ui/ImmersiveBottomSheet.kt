@@ -1,28 +1,74 @@
+package org.cwcc.open.plugin.home.screen
 
-package org.cwcc.open.plugin.geokori.ui
-
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Directions
+import androidx.compose.material.icons.filled.DirectionsTransit
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Hotel
+import androidx.compose.material.icons.filled.LocalGasStation
+import androidx.compose.material.icons.filled.LocalHospital
+import androidx.compose.material.icons.filled.LocalParking
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Traffic
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
@@ -33,22 +79,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
 // ==================== 状态定义 ====================
 enum class SheetAnchor {
-  COLLAPSED,   // 完全折叠（只显示搜索条）
-  PEEK,        // 窥视态（快捷功能 + 列表顶部）
-  HALF,        // 半展开（列表占屏幕40%）
-  EXPANDED     // 全展开（列表占屏幕85%）
+  COLLAPSED,
+  PEEK,
+  HALF,
+  EXPANDED
 }
 
 data class SheetConfig(
-    val collapsedHeight: Float = 80f,      // dp
-    val peekHeight: Float = 220f,          // dp
-    val halfHeightRatio: Float = 0.45f,    // 屏幕比例
-    val expandedHeightRatio: Float = 0.88f // 屏幕比例
+    val collapsedHeight: Float = 80f,
+    val peekHeight: Float = 220f,
+    val halfHeightRatio: Float = 0.45f,
+    val expandedHeightRatio: Float = 0.88f
 )
 
 // ==================== 沉浸式底部面板 ====================
@@ -64,7 +112,6 @@ fun ImmersiveBottomSheet(
   val density = LocalDensity.current
   val screenHeightPx = with(density) { LocalConfiguration.current.screenHeightDp.dp.toPx() }
 
-  // 将 dp 配置转为 px
   val collapsedPx = with(density) { config.collapsedHeight.dp.toPx() }
   val peekPx = with(density) { config.peekHeight.dp.toPx() }
   val halfPx = screenHeightPx * config.halfHeightRatio
@@ -80,121 +127,175 @@ fun ImmersiveBottomSheet(
   }
 
   val scope = rememberCoroutineScope()
-  val offsetY = sheetState.offset
 
-  // 计算进度 (0 = collapsed, 1 = expanded)
-  val progress by remember {
-    derivedStateOf {
-      val current = offsetY.value
-      val range = expandedPx - collapsedPx
-      if (range <= 0) 0f else 1f - ((current - collapsedPx) / range).coerceIn(0f, 1f)
+  // 核心：使用独立的 MutableState 存储当前偏移量
+  var currentOffset by remember { mutableFloatStateOf(sheetState.offset.value) }
+
+  // 同步 Animatable 到 currentOffset
+  LaunchedEffect(currentOffset) {
+    // 只在非动画状态同步
+    if (sheetState.animationJob?.isActive != true) {
+      sheetState.offset.snapTo(currentOffset)
     }
   }
 
-  // 通知外部进度变化
+  val progress by remember {
+    derivedStateOf {
+      val range = expandedPx - collapsedPx
+      if (range <= 0) 0f else ((currentOffset - collapsedPx) / range).coerceIn(0f, 1f)
+    }
+  }
+
+  val sheetHeightDp by remember {
+    derivedStateOf { with(density) { currentOffset.toDp() } }
+  }
+
   LaunchedEffect(progress) {
     onSheetProgress(progress)
   }
 
-  // 吸附到最近的锚点
-  fun settleToNearestAnchor() {
-    val current = offsetY.value
-    val target = anchors.minByOrNull { (_, value) -> (value - current).absoluteValue }?.key ?: SheetAnchor.PEEK
-    sheetState.currentAnchor = target
-    onAnchorChanged(target)
-    scope.launch {
-      val targetPx = anchors[target] ?: peekPx
-      offsetY.animateTo(targetPx, animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f))
+  // 统一的动画函数
+  fun animateToAnchor(anchor: SheetAnchor) {
+    // 取消之前的动画
+    sheetState.animationJob?.cancel()
+    sheetState.animationJob = null
+
+    val targetPx = anchors[anchor] ?: peekPx
+    sheetState.currentAnchor = anchor
+    onAnchorChanged(anchor)
+
+    // 如果当前值已经是目标值，直接返回
+    if ((currentOffset - targetPx).absoluteValue < 1f) {
+      return
+    }
+
+    // 启动动画
+    sheetState.animationJob = scope.launch {
+      // 同步 Animatable 起点
+      sheetState.offset.snapTo(currentOffset)
+      // 执行动画
+      sheetState.offset.animateTo(
+          targetPx,
+          spring(dampingRatio = 0.85f, stiffness = 400f)
+      )
+      // 动画完成后更新 currentOffset
+      currentOffset = targetPx
     }
   }
 
-  // 处理拖拽手势
+  // 拖拽手势
   val dragModifier = Modifier.pointerInput(Unit) {
     val velocityTracker = VelocityTracker()
     detectVerticalDragGestures(
         onDragStart = {
           velocityTracker.resetTracking()
-          scope.launch { offsetY.stop() }
+          // 取消正在进行的动画
+          sheetState.animationJob?.cancel()
+          sheetState.animationJob = null
+          // 同步 Animatable 到当前值
+          scope.launch {
+            sheetState.offset.snapTo(currentOffset)
+          }
         },
         onDragEnd = {
           val velocity = velocityTracker.calculateVelocity().y
-          // 根据速度判断滑动意图
-          if (velocity > 1500) {
-            // 快速下滑 -> 降级
-            val current = sheetState.currentAnchor
-            val next = when (current) {
-              SheetAnchor.EXPANDED -> SheetAnchor.HALF
-              SheetAnchor.HALF -> SheetAnchor.PEEK
-              SheetAnchor.PEEK -> SheetAnchor.COLLAPSED
-              SheetAnchor.COLLAPSED -> SheetAnchor.COLLAPSED
+          val currentValue = currentOffset
+
+          // 计算目标锚点
+          val targetAnchor = when {
+            velocity > 1500f -> {
+              // 快速上滑 - 收起
+              when (sheetState.currentAnchor) {
+                SheetAnchor.EXPANDED -> SheetAnchor.HALF
+                SheetAnchor.HALF -> SheetAnchor.PEEK
+                else -> SheetAnchor.COLLAPSED
+              }
             }
-            sheetState.currentAnchor = next
-            onAnchorChanged(next)
-            scope.launch {
-              offsetY.animateTo(anchors[next] ?: peekPx, spring(0.8f, 500f))
+            velocity < -1500f -> {
+              // 快速下滑 - 展开
+              when (sheetState.currentAnchor) {
+                SheetAnchor.COLLAPSED -> SheetAnchor.PEEK
+                SheetAnchor.PEEK -> SheetAnchor.HALF
+                else -> SheetAnchor.EXPANDED
+              }
             }
-          } else if (velocity < -1500) {
-            // 快速上滑 -> 升级
-            val current = sheetState.currentAnchor
-            val next = when (current) {
-              SheetAnchor.COLLAPSED -> SheetAnchor.PEEK
-              SheetAnchor.PEEK -> SheetAnchor.HALF
-              SheetAnchor.HALF -> SheetAnchor.EXPANDED
-              SheetAnchor.EXPANDED -> SheetAnchor.EXPANDED
+            else -> {
+              // 慢速拖拽 - 吸附到最近锚点
+              anchors.minByOrNull { (_, value) ->
+                (value - currentValue).absoluteValue
+              }?.key ?: SheetAnchor.PEEK
             }
-            sheetState.currentAnchor = next
-            onAnchorChanged(next)
-            scope.launch {
-              offsetY.animateTo(anchors[next] ?: halfPx, spring(0.8f, 500f))
+          }
+
+          val targetPx = anchors[targetAnchor] ?: peekPx
+
+          // 确保目标值与当前值不同
+          if ((currentValue - targetPx).absoluteValue > 1f) {
+            // 更新锚点状态
+            sheetState.currentAnchor = targetAnchor
+            onAnchorChanged(targetAnchor)
+
+            // 取消之前的动画
+            sheetState.animationJob?.cancel()
+            sheetState.animationJob = null
+
+            // 启动新动画
+            sheetState.animationJob = scope.launch {
+              // 确保 Animatable 从当前值开始
+              sheetState.offset.snapTo(currentValue)
+              // 执行动画
+              sheetState.offset.animateTo(
+                  targetPx,
+                  spring(dampingRatio = 0.85f, stiffness = 400f)
+              )
+              // 动画完成后更新
+              currentOffset = targetPx
             }
           } else {
-            settleToNearestAnchor()
+            // 如果已经在目标位置，确保 currentOffset 正确
+            currentOffset = targetPx
           }
         },
         onVerticalDrag = { change, dragAmount ->
           change.consume()
           velocityTracker.addPointerInputChange(change)
-          val newValue = (offsetY.value - dragAmount).coerceIn(collapsedPx, expandedPx)
-          scope.launch { offsetY.snapTo(newValue) }
+          val newValue = (currentOffset - dragAmount).coerceIn(collapsedPx, expandedPx)
+          // 直接修改 State，不涉及协程
+          currentOffset = newValue
         }
     )
   }
 
-  // 背景遮罩（根据进度调整透明度）
   val scrimAlpha by remember { derivedStateOf { progress * 0.35f } }
 
   Box(modifier = modifier.fillMaxSize()) {
-    // 遮罩层
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .alpha(scrimAlpha)
-            .background(Color.Black)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-              // 点击遮罩收起面板
-              sheetState.currentAnchor = SheetAnchor.PEEK
-              onAnchorChanged(SheetAnchor.PEEK)
-              scope.launch {
-                offsetY.animateTo(peekPx, spring(0.85f, 400f))
+    if (scrimAlpha > 0.01f) {
+      Box(
+          modifier = Modifier
+              .fillMaxSize()
+              .alpha(scrimAlpha)
+              .background(Color.Black)
+              .clickable(
+                  interactionSource = remember { MutableInteractionSource() },
+                  indication = null
+              ) {
+                animateToAnchor(SheetAnchor.PEEK)
               }
-            }
-    )
+      )
+    }
 
-    // 面板内容
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .graphicsLayer {
-              translationY = offsetY.value
-            }
+            .height(sheetHeightDp)
+            .align(Alignment.BottomCenter)
             .then(dragModifier)
-            .shadow(elevation = (8 + progress * 8).dp, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            .shadow(
+                elevation = (8 + progress * 8).dp,
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+            )
             .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
             .background(Color(0xFFF8F9FA))
-            .heightIn(min = 0.dp, max = with(density) { expandedPx.toDp() })
     ) {
       content()
     }
@@ -202,6 +303,15 @@ fun ImmersiveBottomSheet(
 }
 
 // ==================== Sheet 状态管理 ====================
+class ImmersiveSheetState(
+    initialOffset: Float,
+    initialAnchor: SheetAnchor = SheetAnchor.PEEK
+) {
+  val offset = Animatable(initialOffset)
+  var currentAnchor by mutableStateOf(initialAnchor)
+  var animationJob: Job? = null
+}
+
 @Composable
 fun rememberImmersiveSheetState(
     initialAnchor: SheetAnchor = SheetAnchor.PEEK
@@ -213,153 +323,6 @@ fun rememberImmersiveSheetState(
         initialOffset = peekPx,
         initialAnchor = initialAnchor
     )
-  }
-}
-
-class ImmersiveSheetState(
-    initialOffset: Float,
-    initialAnchor: SheetAnchor
-) {
-  val offset = Animatable(initialOffset)
-  var currentAnchor by mutableStateOf(initialAnchor)
-
-  suspend fun animateTo(anchor: SheetAnchor, targetPx: Float) {
-    currentAnchor = anchor
-    offset.animateTo(targetPx, spring(dampingRatio = 0.85f, stiffness = 400f))
-  }
-
-  suspend fun snapTo(px: Float) {
-    offset.snapTo(px)
-  }
-}
-
-// ==================== 主屏幕：沉浸式地图界面 ====================
-@Composable
-fun ImmersiveMapScreen() {
-  val sheetState = rememberImmersiveSheetState(SheetAnchor.PEEK)
-  var sheetProgress by remember { mutableFloatStateOf(0f) }
-  var selectedPoi by remember { mutableStateOf<PoiItem?>(null) }
-  var isTrafficEnabled by remember { mutableStateOf(true) }
-  var is3DMode by remember { mutableStateOf(false) }
-
-  // 根据面板进度计算各元素的动画值
-  val searchBarScale by remember { derivedStateOf { 1f - sheetProgress * 0.08f } }
-  val searchBarAlpha by remember { derivedStateOf { 1f - sheetProgress * 0.6f } }
-  val searchBarOffset by remember { derivedStateOf { -(sheetProgress * 40).dp } }
-
-  val sideButtonsOffset by remember { derivedStateOf { -(sheetProgress * 60).dp } }
-
-  Box(modifier = Modifier.fillMaxSize()) {
-    // ========== 1. 地图底层 ==========
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFE8E0D5))
-    ) {
-      SimulatedRoadGrid()
-
-      // 地图中心标记（模拟自车位置）
-      Box(modifier = Modifier.fillMaxSize()) {
-        // 自车位置会根据面板进度下移，保持可见
-        val carOffset by remember { derivedStateOf { sheetProgress * 120 } }
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .offset(y = carOffset.dp)
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF4285F4))
-                .shadow(8.dp, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-          Icon(
-              imageVector = Icons.Default.Navigation,
-              contentDescription = "自车",
-              tint = Color.White,
-              modifier = Modifier.size(28.dp)
-          )
-        }
-      }
-    }
-
-    // ========== 2. 顶部搜索栏（随面板进度联动）==========
-    Box(
-        modifier = Modifier
-            .align(Alignment.TopCenter)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-            .statusBarsPadding()
-            .graphicsLayer {
-              scaleX = searchBarScale
-              scaleY = searchBarScale
-              alpha = searchBarAlpha
-              translationY = searchBarOffset.value
-            }
-    ) {
-      SearchHeaderV2()
-    }
-
-    // ========== 3. 右侧功能按钮列（随面板进度上移）==========
-    Box(
-        modifier = Modifier
-            .align(Alignment.CenterEnd)
-            .padding(end = 12.dp)
-            .offset(y = (-40).dp + sideButtonsOffset)
-    ) {
-      SideActionColumnV2(
-          isTrafficEnabled = isTrafficEnabled,
-          onTrafficToggle = { isTrafficEnabled = !isTrafficEnabled },
-          is3DMode = is3DMode,
-          on3DToggle = { is3DMode = !is3DMode }
-      )
-    }
-
-    // ========== 4. 定位按钮 ==========
-    LocationFabV2(
-        onClick = { },
-        modifier = Modifier
-            .align(Alignment.BottomEnd)
-            .padding(end = 12.dp, bottom = 236.dp)
-            .offset(y = sideButtonsOffset)
-    )
-
-    // ========== 5. 沉浸式底部面板 ==========
-    ImmersiveBottomSheet(
-        sheetState = sheetState,
-        onSheetProgress = { sheetProgress = it },
-        onAnchorChanged = { anchor ->
-          if (anchor == SheetAnchor.COLLAPSED) {
-            selectedPoi = null
-          }
-        }
-    ) {
-      BottomSheetContentV2(
-          progress = sheetProgress,
-          sheetState = sheetState,
-          onPoiClick = { poi ->
-            selectedPoi = poi
-          }
-      )
-    }
-
-    // ========== 6. POI 详情浮层（在面板之上）==========
-    AnimatedVisibility(
-        visible = selectedPoi != null && sheetState.currentAnchor != SheetAnchor.EXPANDED,
-        enter = slideInVertically { it } + fadeIn(),
-        exit = slideOutVertically { it } + fadeOut(),
-        modifier = Modifier.align(Alignment.BottomCenter)
-    ) {
-      selectedPoi?.let { poi ->
-        PoiDetailCardV2(
-            poi = poi,
-            onClose = { selectedPoi = null },
-            onNavigate = { },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 240.dp)
-                .fillMaxWidth()
-        )
-      }
-    }
   }
 }
 
@@ -443,77 +406,20 @@ fun WeatherChip(icon: ImageVector, text: String, bg: Color) {
   }
 }
 
-// ==================== 右侧按钮列 V2 ====================
-@Composable
-fun SideActionColumnV2(
-    isTrafficEnabled: Boolean,
-    onTrafficToggle: () -> Unit,
-    is3DMode: Boolean,
-    on3DToggle: () -> Unit
-) {
-  Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-    ActionButton(icon = Icons.Default.Layers, onClick = { })
-    ActionButton(
-        icon = Icons.Default.Traffic,
-        onClick = onTrafficToggle,
-        containerColor = if (isTrafficEnabled) Color(0xFF4285F4) else Color.White,
-        contentColor = if (isTrafficEnabled) Color.White else Color(0xFF5F6368)
-    )
-    ActionButton(
-        text = if (is3DMode) "3D" else "2D",
-        onClick = on3DToggle,
-        containerColor = if (is3DMode) Color(0xFF4285F4) else Color.White,
-        contentColor = if (is3DMode) Color.White else Color(0xFF5F6368)
-    )
-    ActionButton(icon = Icons.Default.MoreVert, onClick = { })
-  }
-}
-
-@Composable
-fun ActionButton(
-    icon: ImageVector? = null,
-    text: String? = null,
-    onClick: () -> Unit,
-    containerColor: Color = Color.White,
-    contentColor: Color = Color(0xFF5F6368)
-) {
-  FloatingActionButton(
-      onClick = onClick,
-      containerColor = containerColor,
-      contentColor = contentColor,
-      modifier = Modifier.size(44.dp),
-      elevation = FloatingActionButtonDefaults.elevation(3.dp)
-  ) {
-    icon?.let { Icon(it, null, modifier = Modifier.size(22.dp)) }
-      ?: text?.let { Text(it, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
-  }
-}
-
-@Composable
-fun LocationFabV2(onClick: () -> Unit, modifier: Modifier = Modifier) {
-  FloatingActionButton(
-      onClick = onClick,
-      containerColor = Color.White,
-      contentColor = Color(0xFF4285F4),
-      modifier = modifier.size(48.dp),
-      elevation = FloatingActionButtonDefaults.elevation(4.dp),
-      shape = CircleShape
-  ) {
-    Icon(Icons.Default.MyLocation, "定位", modifier = Modifier.size(24.dp))
-  }
-}
-
-// ==================== 底部面板内容 V2（联动版）====================
+// ==================== 底部面板内容 V2 ====================
 @Composable
 fun BottomSheetContentV2(
     progress: Float,
     sheetState: ImmersiveSheetState,
     onPoiClick: (PoiItem) -> Unit
 ) {
-  val scope = rememberCoroutineScope()
+  Column(
+      modifier = Modifier
+          .fillMaxWidth()
+          .fillMaxHeight()
+  ) {
+    SearchHeaderV2()
 
-  Column(modifier = Modifier.fillMaxWidth()) {
-    // 拖拽指示条 + 快捷操作（在折叠态也可见）
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -529,7 +435,6 @@ fun BottomSheetContentV2(
       )
     }
 
-    // 快捷操作网格（随进度变化布局）
     AnimatedContent(
         targetState = progress > 0.3f,
         label = "quick_actions"
@@ -541,7 +446,6 @@ fun BottomSheetContentV2(
       }
     }
 
-    // 分割线（进度越大越明显）
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -551,7 +455,6 @@ fun BottomSheetContentV2(
             .background(Color(0xFFDADCE0))
     )
 
-    // 列表头部（带吸附效果）
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -572,7 +475,6 @@ fun BottomSheetContentV2(
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    // 推荐列表
     val samplePois = remember {
       listOf(
           PoiItem("1", "星巴克咖啡", "餐饮", 4.8f, "120m", "建国路88号SOHO现代城", listOf("咖啡", "WiFi", "安静")),
@@ -585,7 +487,7 @@ fun BottomSheetContentV2(
     }
 
     LazyColumn(
-        modifier = Modifier.heightIn(max = 500.dp),
+        modifier = Modifier.weight(1f),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
     ) {
@@ -598,7 +500,7 @@ fun BottomSheetContentV2(
   }
 }
 
-// 折叠态快捷操作（单行紧凑布局）
+// 折叠态快捷操作
 @Composable
 fun CollapsedQuickActions() {
   val actions = remember {
@@ -619,7 +521,7 @@ fun CollapsedQuickActions() {
   }
 }
 
-// 展开态快捷操作（双行网格 + 更多功能）
+// 展开态快捷操作
 @Composable
 fun ExpandedQuickActions() {
   val actions = remember {
@@ -675,7 +577,7 @@ fun QuickActionItem(action: QuickAction) {
   }
 }
 
-// ==================== POI 列表项 V2 ====================
+// ==================== POI 列表项 ====================
 @Composable
 fun PoiListItemV2(poi: PoiItem, onClick: () -> Unit) {
   Card(
@@ -784,7 +686,7 @@ fun PoiListItemV2(poi: PoiItem, onClick: () -> Unit) {
   }
 }
 
-// ==================== POI 详情卡片 V2 ====================
+// ==================== POI 详情卡片 ====================
 @Composable
 fun PoiDetailCardV2(
     poi: PoiItem,
@@ -858,44 +760,7 @@ fun PoiDetailCardV2(
   }
 }
 
-// ==================== 模拟道路网格 ====================
-@Composable
-fun SimulatedRoadGrid() {
-  Box(modifier = Modifier.fillMaxSize()) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(10.dp)
-            .align(Alignment.Center)
-            .background(Color(0xFFFFF8E1))
-    )
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(8.dp)
-            .align(Alignment.Center)
-            .offset(y = (-80).dp)
-            .background(Color(0xFFFFF8E1))
-    )
-    Box(
-        modifier = Modifier
-            .width(10.dp)
-            .fillMaxHeight()
-            .align(Alignment.Center)
-            .background(Color(0xFFFFF8E1))
-    )
-    Box(
-        modifier = Modifier
-            .width(8.dp)
-            .fillMaxHeight()
-            .align(Alignment.Center)
-            .offset(x = 100.dp)
-            .background(Color(0xFFFFF8E1))
-    )
-  }
-}
-
-// ==================== 数据模型（复用）====================
+// ==================== 数据模型 ====================
 data class QuickAction(
     val icon: ImageVector,
     val label: String,

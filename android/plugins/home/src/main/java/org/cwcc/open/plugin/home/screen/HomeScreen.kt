@@ -66,7 +66,7 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
   var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.GeoKori) }
 
   // 面板状态
-  val sheetState = rememberImmersiveSheetState(SheetAnchor.PEEK)  // 默认 PEEK（显示底部快捷栏）
+  val sheetState = rememberImmersiveSheetState(SheetAnchor.PEEK)
   var sheetProgress by remember { mutableFloatStateOf(0f) }
   var selectedPoi by remember { mutableStateOf<PoiItem?>(null) }
 
@@ -98,7 +98,6 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
         NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
       },
   ) {
-    // ✅ 关键：在 NavigationSuiteScaffold 的 content 内部用 Box 包裹
     Box(modifier = Modifier.fillMaxSize()) {
       // 1. 最底层：地图/插件内容
       when (currentDestination) {
@@ -135,7 +134,7 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
         )
       }
 
-      // 3. POI 详情浮层（点击列表项后弹出）
+      // 3. POI 详情浮层
       AnimatedVisibility(
           visible = selectedPoi != null && sheetState.currentAnchor != SheetAnchor.EXPANDED,
           enter = slideInVertically { it } + fadeIn(),
@@ -145,7 +144,9 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
         selectedPoi?.let { poi ->
           PoiDetailCardV2(
               poi = poi,
-              onClose = { selectedPoi = null },
+              onClose = {
+                selectedPoi = null
+              },
               onNavigate = {
                 // 触发导航逻辑
               },

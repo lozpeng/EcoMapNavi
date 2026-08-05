@@ -57,7 +57,9 @@ converter-gson = "2.11.0"     # 或 retrofit 3.x 对应的版本
 accompanist = "0.36.0"
 kotlinx-collections-immutable = "0.3.8"
 koin = "4.1.0"
-kotlin-reflect = "2.3.20"     # 与 kotlin 版本一致
+kotlin-reflect = "2.3.20"
+foundation = "1.11.4"
+ui = "1.11.4"     # 与 kotlin 版本一致
 [libraries]
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 
@@ -190,6 +192,8 @@ gsyVideoPlayer-java = { group = "io.github.carguo", name = "gsyvideoplayer-java"
 gsyVideoPlayer-armv7a = { group = "io.github.carguo", name = "gsyvideoplayer-armv7a", version.ref = "gsyVideoPlayer" }
 gsyVideoPlayer-arm64 = { group = "io.github.carguo", name = "gsyvideoplayer-arm64", version.ref = "gsyVideoPlayer" }
 gsyVideoPlayer-exo = { group = "io.github.carguo", name = "gsyvideoplayer-ex_so", version.ref = "gsyVideoPlayer" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
