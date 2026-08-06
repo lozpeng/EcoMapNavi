@@ -8,7 +8,7 @@ import com.combo.core.api.IPluginEntryClass
 import com.combo.core.model.PluginContext
 import com.stadiamaps.ferrostar.core.AndroidTtsStatusListener
 import java.util.Locale
-import org.cwcc.open.plugin.geokori.ui.theme.FerrostarTheme
+import org.cwcc.open.plugin.common.theme.FerrostarTheme
 import org.koin.core.module.Module
 import timber.log.Timber
 import uniffi.ferrostar.createFerrostarLogger

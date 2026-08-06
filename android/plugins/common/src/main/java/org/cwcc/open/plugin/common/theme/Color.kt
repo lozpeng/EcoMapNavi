@@ -1,4 +1,4 @@
-package org.cwcc.open.plugin.geokori.ui.theme
+package org.cwcc.open.plugin.common.theme
 
 import androidx.compose.ui.graphics.Color
 

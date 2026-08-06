@@ -9,8 +9,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Surface
 import com.combo.core.component.activity.BasePluginActivity
 import com.stadiamaps.ferrostar.core.AndroidTtsStatusListener
-import org.cwcc.open.plugin.geokori.ui.theme.FerrostarTheme
 import java.util.Locale
+import org.cwcc.open.plugin.common.theme.FerrostarTheme
 import timber.log.Timber
 import uniffi.ferrostar.createFerrostarLogger
 

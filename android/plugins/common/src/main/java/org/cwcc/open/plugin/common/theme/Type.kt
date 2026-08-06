@@ -1,4 +1,4 @@
-package org.cwcc.open.plugin.geokori.ui.theme
+package org.cwcc.open.plugin.common.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

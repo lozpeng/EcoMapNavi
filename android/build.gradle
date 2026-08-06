@@ -64,6 +64,7 @@ aar2apk {
         module(":plugins:geokori")
         module(":plugins:setting")
         module(":plugins:example")
+        module(":plugins:animonitor")
     }
 
     signing {

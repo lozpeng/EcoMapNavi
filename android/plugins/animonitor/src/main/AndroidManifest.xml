@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.cwcc.open.plugin.ani"
+    android:versionCode="2"
+    android:versionName="1.0.1">
+
+    <application
+        android:label="调查监测"
+        android:icon="@drawable/plugin_icon">
+        <meta-data
+            android:name="plugin.description"
+            android:value="野生动物保护监测模块，支持野生动物保护监测数据可视化表达。" />
+        <meta-data
+            android:name="plugin.entryClass"
+            android:value="org.cwcc.open.plugin.ani.PluginEntryClass" />
+    </application>
+</manifest>
