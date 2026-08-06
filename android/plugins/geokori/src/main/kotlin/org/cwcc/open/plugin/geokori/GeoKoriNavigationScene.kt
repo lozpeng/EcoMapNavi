@@ -7,19 +7,31 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+
 import com.stadiamaps.ferrostar.composeui.config.NavigationViewComponentBuilder
 import com.stadiamaps.ferrostar.composeui.config.VisualNavigationViewConfig
 import com.stadiamaps.ferrostar.composeui.config.withCustomOverlayView
@@ -32,6 +44,12 @@ import com.stadiamaps.ferrostar.maplibreui.views.DynamicallyOrientingNavigationV
 import org.cwcc.open.plugin.geokori.ui.DestinationSelectionBottomSheet
 import org.cwcc.open.plugin.geokori.ui.DestinationSelectionCameraEffect
 import kotlinx.serialization.json.buildJsonObject
+import org.cwcc.open.plugin.geokori.ui.BottomSheetContentV2
+import org.cwcc.open.plugin.geokori.ui.ImmersiveBottomSheet
+import org.cwcc.open.plugin.geokori.ui.PoiDetailCardV2
+import org.cwcc.open.plugin.geokori.ui.PoiItem
+import org.cwcc.open.plugin.geokori.ui.SheetAnchor
+import org.cwcc.open.plugin.geokori.ui.rememberImmersiveSheetState
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.map.MapOptions
@@ -111,6 +129,7 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
       topOverlayBottomPx = destinationPreviewTopPaddingPx,
       navigationMapState = navigationMapState,
   )
+
 
   DynamicallyOrientingNavigationView(
       modifier = Modifier.fillMaxSize(),

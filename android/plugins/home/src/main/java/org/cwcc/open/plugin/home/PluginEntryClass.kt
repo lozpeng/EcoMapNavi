@@ -6,6 +6,7 @@ import com.combo.core.api.IPluginEntryClass
 import com.combo.core.model.PluginContext
 import org.cwcc.open.plugin.common.navigation.IHubComposeNavigator
 import org.cwcc.open.plugin.common.navigation.LocalComposeNavigator
+import org.cwcc.open.plugin.common.theme.FerrostarTheme
 import org.cwcc.open.plugin.home.di.diModule
 import org.koin.core.module.Module
 import org.koin.java.KoinJavaComponent.inject
@@ -28,6 +29,7 @@ class PluginEntryClass : IPluginEntryClass {
 
     @Composable
     override fun Content() {
+      FerrostarTheme {
         val composeNavigator: IHubComposeNavigator by inject(
             clazz = IHubComposeNavigator::class.java,
         )
@@ -35,8 +37,9 @@ class PluginEntryClass : IPluginEntryClass {
         CompositionLocalProvider(
             LocalComposeNavigator provides composeNavigator,
         ) {
-            AppMain(composeNavigator = composeNavigator)
+          AppMain(composeNavigator = composeNavigator)
         }
+      }
     }
 
     override fun onLoad(context: PluginContext) {

@@ -24,6 +24,7 @@ include ':ui:ui-maplibre'
 include ':ui:ui-formatters'
 include ':ui:ui-shared'
 include ':ui:ui-maplibre-car-app'
+include ':ui:ui-geokori'
 include ':car-app'
 
 //Combolite plugins开发支持

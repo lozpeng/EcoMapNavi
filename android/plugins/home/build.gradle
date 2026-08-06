@@ -44,8 +44,8 @@ android {
 }
 
 dependencies {
-    implementation libs.androidx.foundation
-    implementation libs.androidx.ui
+    implementation libs.androidx.compose.foundation
+    implementation libs.androidx.compose.ui
     compileOnly project(':plugins:dependencies')
     compileOnly project(':plugins:common')
     compileOnly project(':plugins:setting')

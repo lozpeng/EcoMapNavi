@@ -1,4 +1,5 @@
-package org.cwcc.open.plugin.home.screen
+package org.cwcc.open.plugin.geokori.ui
+
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
@@ -25,25 +26,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Air
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Directions
-import androidx.compose.material.icons.filled.DirectionsTransit
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Hotel
-import androidx.compose.material.icons.filled.LocalGasStation
-import androidx.compose.material.icons.filled.LocalHospital
-import androidx.compose.material.icons.filled.LocalParking
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Traffic
-import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -80,9 +63,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetState
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetValue
 
 // ==================== 状态定义 ====================
 enum class SheetAnchor {
@@ -413,6 +397,39 @@ fun BottomSheetContentV2(
     sheetState: ImmersiveSheetState,
     onPoiClick: (PoiItem) -> Unit
 ) {
+  val scope = rememberCoroutineScope()
+  val density = LocalDensity.current
+  val configuration = LocalConfiguration.current
+
+  // ========== 内部处理 POI 点击 ==========
+  fun handlePoiClick(poi: PoiItem) {
+    // 如果当前是 EXPANDED 状态，先收起到 HALF
+    if (sheetState.currentAnchor == SheetAnchor.EXPANDED) {
+      scope.launch {
+        // 更新锚点状态
+        sheetState.currentAnchor = SheetAnchor.HALF
+
+        // 计算 HALF 状态对应的像素值
+        val screenHeightPx = with(density) {
+          configuration.screenHeightDp.dp.toPx()
+        }
+        val halfPx = screenHeightPx * 0.45f  // 与 SheetConfig.halfHeightRatio 保持一致
+
+        // 执行收起动画
+        sheetState.offset.animateTo(
+            halfPx,
+            spring(dampingRatio = 0.85f, stiffness = 400f)
+        )
+        // 动画完成后回调给外部
+        onPoiClick(poi)
+      }
+    } else {
+      // 非 EXPANDED 状态直接回调
+      onPoiClick(poi)
+    }
+  }
+
+
   Column(
       modifier = Modifier
           .fillMaxWidth()
@@ -492,7 +509,9 @@ fun BottomSheetContentV2(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
     ) {
       items(samplePois) { poi ->
-        PoiListItemV2(poi = poi, onClick = { onPoiClick(poi) })
+        PoiListItemV2(poi = poi, onClick = {
+          handlePoiClick(poi)
+        })
       }
     }
 
@@ -777,3 +796,108 @@ data class PoiItem(
     val address: String,
     val tags: List<String>
 )
+
+
+@Composable
+fun BottomSheetContentV3(
+    targetValue: FlexibleSheetValue,
+    sheetState: FlexibleSheetState,
+    onPoiClick: (PoiItem) -> Unit
+) {
+  val scope = rememberCoroutineScope()
+  val density = LocalDensity.current
+  val configuration = LocalConfiguration.current
+  // ========== 内部处理 POI 点击 ==========
+  fun handlePoiClick(poi: PoiItem) {
+      scope.launch {
+        onPoiClick(poi)
+      }
+  }
+  Column(
+      modifier = Modifier
+          .fillMaxWidth()
+          .fillMaxHeight()
+  ) {
+    SearchHeaderV2()
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+      Box(
+          modifier = Modifier
+              .width(40.dp)
+              .height(4.dp)
+              .clip(RoundedCornerShape(2.dp))
+              .background(Color(0xFFDADCE0))
+      )
+    }
+    var status = (sheetState.targetValue !=  FlexibleSheetValue.SlightlyExpanded)
+    AnimatedContent(
+        targetState = status,
+        label = "quick_actions"
+    ) { isExpanded ->
+      if (isExpanded) {
+        ExpandedQuickActions()
+      } else {
+        CollapsedQuickActions()
+      }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .height(1.dp)
+            .alpha(0.3f +  sheetState.visibilityProgress * 0.7f)
+            .background(Color(0xFFDADCE0))
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+      Text(
+          text = "附近推荐",
+          fontSize = if (status) 18.sp else 16.sp,
+          fontWeight = FontWeight.Bold,
+          color = Color(0xFF202124)
+      )
+      TextButton(onClick = { }) {
+        Text("查看更多", fontSize = 13.sp)
+      }
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    val samplePois = remember {
+      listOf(
+          PoiItem("1", "星巴克咖啡", "餐饮", 4.8f, "120m", "建国路88号SOHO现代城", listOf("咖啡", "WiFi", "安静")),
+          PoiItem("2", "万达广场", "购物", 4.6f, "350m", "长安街1号", listOf("商场", "IMAX", "餐饮")),
+          PoiItem("3", "建国门地铁站", "交通", 4.9f, "80m", "建国门站B口", listOf("1号线", "2号线", "换乘")),
+          PoiItem("4", "海底捞火锅", "餐饮", 4.7f, "500m", "朝阳路66号", listOf("火锅", "24小时", "排队")),
+          PoiItem("5", "北京协和医院", "医疗", 4.9f, "1.2km", "东单北大街53号", listOf("三甲", "急诊", "专家")),
+          PoiItem("6", "全聚德烤鸭店", "餐饮", 4.5f, "800m", "前门大街30号", listOf("烤鸭", "老字号", "宴请")),
+      )
+    }
+
+    LazyColumn(
+        modifier = Modifier.weight(1f),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
+    ) {
+      items(samplePois) { poi ->
+        PoiListItemV2(poi = poi, onClick = {
+          handlePoiClick(poi)
+        })
+      }
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+  }
+}

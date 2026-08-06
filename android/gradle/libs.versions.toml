@@ -59,7 +59,8 @@ kotlinx-collections-immutable = "0.3.8"
 koin = "4.1.0"
 kotlin-reflect = "2.3.20"
 foundation = "1.11.4"
-ui = "1.11.4"     # 与 kotlin 版本一致
+ui = "1.11.4"
+material3 = "1.4.0"     # 与 kotlin 版本一致
 [libraries]
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 
@@ -82,7 +83,7 @@ androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "l
 # Jetpack Compose — 全部由 BOM 管理，删除单独版本
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidx-activity-compose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose" }
-androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
@@ -162,9 +163,9 @@ androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 androidx-compose-animation = { group = "androidx.compose.animation", name = "animation" }
 androidx-compose-material = { group = "androidx.compose.material", name = "material" }
-androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation-compose" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 # 网络和序列化
 retrofit-bom = { group = "com.squareup.retrofit2", name = "retrofit-bom", version.ref = "retrofit" }
@@ -192,8 +193,8 @@ gsyVideoPlayer-java = { group = "io.github.carguo", name = "gsyvideoplayer-java"
 gsyVideoPlayer-armv7a = { group = "io.github.carguo", name = "gsyvideoplayer-armv7a", version.ref = "gsyVideoPlayer" }
 gsyVideoPlayer-arm64 = { group = "io.github.carguo", name = "gsyvideoplayer-arm64", version.ref = "gsyVideoPlayer" }
 gsyVideoPlayer-exo = { group = "io.github.carguo", name = "gsyvideoplayer-ex_so", version.ref = "gsyVideoPlayer" }
-androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
-androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

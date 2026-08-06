@@ -55,6 +55,10 @@ android {
 }
 
 dependencies {
+    implementation libs.androidx.compose.foundation
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.material3
+
     compileOnly project(':plugins:common')
     compileOnly project(':plugins:dependencies')
     implementation project(':core')
@@ -63,6 +67,7 @@ dependencies {
     implementation project(':ui:ui-compose')
     implementation project(':ui:ui-maplibre')
     implementation project(':ui:ui-maplibre-car-app')
+    implementation project(':ui:ui-geokori')
 
     coreLibraryDesugaring libs.desugar.jdk.libs
 

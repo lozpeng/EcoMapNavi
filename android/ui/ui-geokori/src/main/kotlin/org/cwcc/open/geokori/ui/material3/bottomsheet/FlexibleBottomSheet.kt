@@ -1,0 +1,422 @@
+package org.cwcc.open.geokori.ui.material3.bottomsheet
+
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.Surface
+import androidx.compose.material3.contentColorFor
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.collapse
+import androidx.compose.ui.semantics.dismiss
+import androidx.compose.ui.semantics.expand
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleBottomSheetPopup
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetState
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetValue
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.Scrim
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.consumeSwipeWithinBottomSheetBoundsNestedScrollConnection
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.emptySwipeWithinBottomSheetBoundsNestedScrollConnection
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.flexibleBottomSheetAnchorChangeHandler
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.flexibleBottomSheetSwipeable
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.rememberFlexibleBottomSheetState
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.removeMinHeightConstraint
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.resolveSheetSize
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.screenHeight
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.sheetPaddings
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.toPx
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.wrapContentMeasureConstraint
+
+/**
+ * https://github.com/skydoves/FlexibleBottomSheet
+ * Flexible bottom sheets are used as an alternative to inline menus or simple dialogs on mobile,
+ * especially when offering a long list of action items, or when items require longer descriptions
+ * and icons. Like dialogs, flexible bottom sheets appear in front of app content, disabling all other
+ * app functionality when they appear, and remaining on screen until confirmed, dismissed, or a
+ * required action has been taken.
+ *
+ * ![Bottom sheet image](https://developer.android.com/images/reference/androidx/compose/material3/bottom_sheet.png)
+ *
+ * A simple example of a flexible bottom sheet looks like this:
+ *
+ * @param onDismissRequest Executes when the user clicks outside of the bottom sheet, after sheet
+ * animates to [FlexibleSheetValue.Hidden].
+ * @param modifier Optional [Modifier] for the bottom sheet.
+ * @param sheetState The state of the bottom sheet.
+ * @param onTargetChanges Callback to listen for changes in [FlexibleSheetValue] targets.
+ * @param shape The shape of the bottom sheet.
+ * @param containerColor The color used for the background of this bottom sheet
+ * @param contentColor The preferred color for content inside this bottom sheet. Defaults to either
+ * the matching content color for [containerColor], or to the current [LocalContentColor] if
+ * [containerColor] is not a color from the theme.
+ * @param tonalElevation The tonal elevation of this bottom sheet.
+ * @param scrimColor Color of the scrim that obscures content when the bottom sheet is open.
+ * @param dragHandle Optional visual marker to swipe the bottom sheet.
+ * @param windowInsets window insets to be passed to the bottom sheet window via [PaddingValues]
+ * params.
+ * @param content The content to be displayed inside the bottom sheet.
+ */
+@Composable
+public fun FlexibleBottomSheet(
+    modifier: Modifier = Modifier,
+    onDismissRequest: () -> Unit = {},
+    onBackPressed: () -> Unit = {},
+    sheetState: FlexibleSheetState = rememberFlexibleBottomSheetState(),
+    onTargetChanges: (FlexibleSheetValue) -> Unit = {},
+    shape: Shape = BottomSheetDefaults.ExpandedShape,
+    containerColor: Color = BottomSheetDefaults.ContainerColor,
+    contentColor: Color = contentColorFor(containerColor),
+    tonalElevation: Dp = BottomSheetDefaults.Elevation,
+    scrimColor: Color = BottomSheetDefaults.ScrimColor,
+    dragHandle: @Composable (() -> Unit)? = { BottomSheetDefaults.DragHandle() },
+    windowInsets: WindowInsets = BottomSheetDefaults.windowInsets,
+    content: @Composable ColumnScope.() -> Unit,
+
+) {
+  val scope = rememberCoroutineScope()
+
+  val animateToDismiss: () -> Unit = {
+    if (sheetState.swipeableState.confirmValueChange(FlexibleSheetValue.Hidden)) {
+      scope.launch { sheetState.hide() }.invokeOnCompletion {
+        if (!sheetState.isVisible) {
+          onDismissRequest()
+        }
+      }
+    }
+  }
+  val settleToDismiss: (velocity: Float) -> Unit = {
+    scope.launch { sheetState.settle(it) }.invokeOnCompletion {
+      if (!sheetState.isVisible) onDismissRequest()
+    }
+  }
+
+  // Callback that is invoked when the anchors have changed.
+  val anchorChangeHandler = remember(sheetState, scope) {
+    flexibleBottomSheetAnchorChangeHandler(
+        state = sheetState,
+        animateTo = { target, velocity ->
+          scope.launch { sheetState.animateTo(target, velocity = velocity) }
+        },
+        snapTo = { target ->
+          val didSnapImmediately = sheetState.trySnapTo(target)
+          if (!didSnapImmediately) {
+            scope.launch { sheetState.snapTo(target) }
+          }
+        },
+    )
+  }
+
+  LaunchedEffect(sheetState.targetValue) {
+    onTargetChanges.invoke(sheetState.targetValue)
+  }
+
+  LaunchedEffect(sheetState.swipeableState.anchors) {
+    sheetState.swipeableState.isInitialized = sheetState.swipeableState.anchors.size ==
+        listOf(
+            FlexibleSheetValue.Hidden,
+            FlexibleSheetValue.SlightlyExpanded,
+            FlexibleSheetValue.IntermediatelyExpanded,
+            FlexibleSheetValue.FullyExpanded,
+        ).size
+  }
+
+  FlexibleBottomSheetPopup(
+      onDismissRequest = {
+        if (sheetState.currentValue == FlexibleSheetValue.FullyExpanded &&
+          sheetState.hasIntermediatelyExpandedState
+        ) {
+          scope.launch { sheetState.intermediatelyExpand() }
+        } else if (sheetState.currentValue == FlexibleSheetValue.IntermediatelyExpanded &&
+          sheetState.hasSlightlyExpandedState
+        ) {
+          scope.launch { sheetState.slightlyExpand() }
+        } else { // Is expanded without collapsed state or is collapsed.
+          scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+        }
+        onBackPressed.invoke()
+      },
+      sheetState = sheetState,
+      windowInsets = windowInsets,
+  ) {
+    var isDragging by remember { mutableStateOf(false) }
+    val isAnimationRunning = sheetState.swipeableState.isAnimationRunning
+    val screenHeightSize = screenHeight()
+    val screenHeightPxSize = screenHeightSize.toPx()
+    val density = LocalDensity.current
+
+    // Track measured content height for wrap content mode
+    var contentHeightPx by remember { mutableStateOf(0f) }
+    val contentHeightDp = with(density) { contentHeightPx.toDp() }
+
+    val flexibleSheetSize = sheetState.flexibleSheetSize
+
+    // Resolve sizes considering wrap content mode
+    val resolvedFullyExpanded = flexibleSheetSize.fullyExpanded
+        .resolveSheetSize(screenHeightPxSize, contentHeightPx)
+    val resolvedIntermediatelyExpanded = flexibleSheetSize.intermediatelyExpanded
+        .resolveSheetSize(screenHeightPxSize, contentHeightPx)
+    val resolvedSlightlyExpanded = flexibleSheetSize.slightlyExpanded
+        .resolveSheetSize(screenHeightPxSize, contentHeightPx)
+
+    val fullyExpandedHeight: Dp = screenHeightSize * resolvedFullyExpanded
+
+    val expectedSheetSize: Dp = when (sheetState.targetValue) {
+      FlexibleSheetValue.Hidden -> 1.dp
+
+      FlexibleSheetValue.FullyExpanded -> screenHeightSize * resolvedFullyExpanded
+
+      FlexibleSheetValue.IntermediatelyExpanded ->
+        screenHeightSize * resolvedIntermediatelyExpanded
+
+      FlexibleSheetValue.SlightlyExpanded -> screenHeightSize * resolvedSlightlyExpanded
+    }
+
+    val sheetModifier = if (sheetState.isModal) {
+      // Use a height that changes with contentHeight to trigger anchor recalculation
+      // when wrap content is used. The tiny offset ensures layout size changes.
+      if (flexibleSheetSize.hasWrapContent) {
+        Modifier.fillMaxWidth().height(screenHeightSize + (contentHeightPx * 0.0001f).dp)
+      } else {
+        Modifier.fillMaxSize()
+      }
+    } else {
+      Modifier.height(
+          if (isDragging || isAnimationRunning) {
+            fullyExpandedHeight
+          } else {
+            expectedSheetSize
+          },
+      )
+    }
+
+    // Hide sheet until content is measured when using wrap content mode
+    val isContentMeasured = contentHeightPx > 0f
+    val needsContentMeasurement = flexibleSheetSize.hasWrapContent && !isContentMeasured
+
+    // The modal scrim must fill the entire popup window (edge-to-edge), independent of the sheet's
+    // container. It used to be drawn inside the sheet container, which for wrap-content sheets is
+    // only screenHeight() tall and bottom-aligned; under enableEdgeToEdge() screenHeight() excludes
+    // the system bars, so the scrim left a status-bar-sized gap at the top of the screen (#98/#15).
+    if (sheetState.isModal) {
+      Scrim(
+          color = scrimColor,
+          onDismissRequest = animateToDismiss,
+          visible = sheetState.targetValue != FlexibleSheetValue.Hidden,
+      )
+    }
+
+    BoxWithConstraints(
+        modifier = sheetModifier
+            .align(Alignment.BottomCenter)
+            .graphicsLayer {
+              alpha = when {
+                needsContentMeasurement -> 0f
+                sheetState.targetValue == FlexibleSheetValue.Hidden &&
+                    !isDragging && !isAnimationRunning -> 0f
+                else -> 1f
+              }
+            },
+    ) {
+      val constraintHeight = constraints.maxHeight.toFloat()
+      val bottomSheetPaneTitle = "Bottom Sheet"
+      Surface(
+          modifier = modifier
+              .widthIn(max = BottomSheetMaxWidth)
+              .fillMaxWidth()
+              .fillMaxHeight()
+              .align(Alignment.BottomCenter)
+              .semantics { paneTitle = bottomSheetPaneTitle }
+              .offset {
+                val offset = sheetState
+                    .requireOffset()
+                    .toInt()
+
+                IntOffset(
+                    x = 0,
+                    y = if (sheetState.isModal) {
+                      offset
+                    } else {
+                      if (isDragging || isAnimationRunning) {
+                        offset
+                      } else {
+                        0
+                      }
+                    },
+                )
+              }
+              .nestedScroll(
+                  remember(sheetState) {
+                    if (sheetState.allowNestedScroll) {
+                      consumeSwipeWithinBottomSheetBoundsNestedScrollConnection(
+                          sheetState = sheetState,
+                          orientation = Orientation.Vertical,
+                          screenHeight = screenHeightSize.value,
+                          onFling = settleToDismiss,
+                          onDragging = {
+                            isDragging = it
+                          },
+                      )
+                    } else {
+                      emptySwipeWithinBottomSheetBoundsNestedScrollConnection()
+                    }
+                  },
+              )
+              .flexibleBottomSheetSwipeable(
+                  sheetState = sheetState,
+                  anchorChangeHandler = anchorChangeHandler,
+                  sheetFullHeight = fullyExpandedHeight.toPx(),
+                  sheetConstraintHeight = constraintHeight,
+                  screenMaxHeight = screenHeightSize.toPx(),
+                  flexibleSheetSize = sheetState.flexibleSheetSize,
+                  isModal = sheetState.isModal,
+                  contentHeight = contentHeightPx,
+                  onDragStarted = {
+                    isDragging = true
+                  },
+                  onDragStopped = {
+                    isDragging = false
+                    settleToDismiss(it)
+                  },
+              ),
+          shape = shape,
+          color = containerColor,
+          contentColor = contentColor,
+          tonalElevation = tonalElevation,
+      ) {
+        // Wrap content in a Box that fills the Surface and aligns content to top.
+        // This ensures content stays at the top when sheet is partially expanded.
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter,
+        ) {
+          Column(
+              modifier = Modifier
+                  .fillMaxWidth()
+                  .then(
+                      // For wrap content, measure against the screen height so the reported content
+                      // height is stable regardless of the (possibly collapsed) container height. This
+                      // fixes non-modal wrap content sheets staying almost hidden (issue #95).
+                      if (flexibleSheetSize.hasWrapContent) {
+                        Modifier.wrapContentMeasureConstraint(screenHeightPxSize.toInt())
+                      } else {
+                        Modifier.removeMinHeightConstraint()
+                      },
+                  )
+                  .onSizeChanged { size ->
+                    contentHeightPx = size.height.toFloat()
+                  }
+                  .then(
+                      if (sheetState.isModal) {
+                        Modifier.sheetPaddings(sheetState)
+                      } else {
+                        Modifier
+                      },
+                  ),
+          ) {
+            if (dragHandle != null) {
+              val collapseActionLabel = "Collapse bottom sheet"
+              val dismissActionLabel = "Dismiss bottom sheet"
+              val expandActionLabel = "expand bottom sheet"
+              Box(
+                  modifier = Modifier
+                      .align(Alignment.CenterHorizontally)
+                      .semantics(mergeDescendants = true) {
+                        // Provides semantics to interact with the bottomsheet based on its
+                        // current value.
+                        with(sheetState) {
+                          dismiss(dismissActionLabel) {
+                            animateToDismiss()
+                            true
+                          }
+                          if (currentValue == FlexibleSheetValue.IntermediatelyExpanded) {
+                            expand(expandActionLabel) {
+                              if (swipeableState.confirmValueChange(
+                                    FlexibleSheetValue.FullyExpanded,
+                                )
+                              ) {
+                                scope.launch { fullyExpand() }
+                              }
+                              true
+                            }
+                          } else if (currentValue == FlexibleSheetValue.SlightlyExpanded) {
+                            expand(expandActionLabel) {
+                              if (swipeableState.confirmValueChange(
+                                    FlexibleSheetValue.IntermediatelyExpanded,
+                                )
+                              ) {
+                                scope.launch { intermediatelyExpand() }
+                              }
+                              true
+                            }
+                          } else if (hasIntermediatelyExpandedState) {
+                            collapse(collapseActionLabel) {
+                              if (
+                                swipeableState.confirmValueChange(
+                                    FlexibleSheetValue.IntermediatelyExpanded,
+                                )
+                              ) {
+                                scope.launch { intermediatelyExpand() }
+                              }
+                              true
+                            }
+                          } else if (hasSlightlyExpandedState) {
+                            collapse(collapseActionLabel) {
+                              if (
+                                swipeableState.confirmValueChange(
+                                    FlexibleSheetValue.SlightlyExpanded,
+                                )
+                              ) {
+                                scope.launch { slightlyExpand() }
+                              }
+                              true
+                            }
+                          }
+                        }
+                      },
+              ) {
+                dragHandle()
+              }
+            }
+            content()
+          }
+        }
+      }
+    }
+  }
+  if (sheetState.hasFullyExpandedState) {
+    LaunchedEffect(sheetState) {
+      sheetState.show()
+    }
+  }
+}

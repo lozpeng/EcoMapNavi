@@ -96,4 +96,5 @@ dependencies {
   ///==============maplbire native 地图
   api(libs.maplibre.compose)
   api(project(":ui:ui-maplibre"))
+  api(project(":ui:ui-geokori"))
 }

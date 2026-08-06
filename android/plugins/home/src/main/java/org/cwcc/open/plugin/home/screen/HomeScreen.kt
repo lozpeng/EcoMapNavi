@@ -115,48 +115,49 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
         )
       }
 
-      // 2. 覆盖层：底部沉浸式面板
-      ImmersiveBottomSheet(
-          sheetState = sheetState,
-          onSheetProgress = { sheetProgress = it },
-          onAnchorChanged = { anchor ->
-            if (anchor == SheetAnchor.COLLAPSED) {
-              selectedPoi = null
-            }
-          }
-      ) {
-        BottomSheetContentV2(
-            progress = sheetProgress,
-            sheetState = sheetState,
-            onPoiClick = { poi ->
-              selectedPoi = poi
-            }
-        )
-      }
+//      // 2. 覆盖层：底部沉浸式面板
+//      ImmersiveBottomSheet(
+//          sheetState = sheetState,
+//          onSheetProgress = { sheetProgress = it },
+//          onAnchorChanged = { anchor ->
+//            if (anchor == SheetAnchor.COLLAPSED) {
+//              selectedPoi = null
+//            }
+//          }
+//      ) {
+//        BottomSheetContentV2(
+//            progress = sheetProgress,
+//            sheetState = sheetState,
+//            onPoiClick = { poi ->
+//              selectedPoi = poi
+//            }
+//        )
+//      }
+//
+//      // 3. POI 详情浮层
+//      AnimatedVisibility(
+//          visible = selectedPoi != null && sheetState.currentAnchor != SheetAnchor.EXPANDED,
+//          enter = slideInVertically { it } + fadeIn(),
+//          exit = slideOutVertically { it } + fadeOut(),
+//          modifier = Modifier.align(Alignment.BottomCenter)
+//      ) {
+//        selectedPoi?.let { poi ->
+//          PoiDetailCardV2(
+//              poi = poi,
+//              onClose = {
+//                selectedPoi = null
+//              },
+//              onNavigate = {
+//                // 触发导航逻辑
+//              },
+//              modifier = Modifier
+//                  .padding(horizontal = 12.dp)
+//                  .padding(bottom = 240.dp)
+//                  .fillMaxWidth()
+//          )
+//        }
+//      }
 
-      // 3. POI 详情浮层
-      AnimatedVisibility(
-          visible = selectedPoi != null && sheetState.currentAnchor != SheetAnchor.EXPANDED,
-          enter = slideInVertically { it } + fadeIn(),
-          exit = slideOutVertically { it } + fadeOut(),
-          modifier = Modifier.align(Alignment.BottomCenter)
-      ) {
-        selectedPoi?.let { poi ->
-          PoiDetailCardV2(
-              poi = poi,
-              onClose = {
-                selectedPoi = null
-              },
-              onNavigate = {
-                // 触发导航逻辑
-              },
-              modifier = Modifier
-                  .padding(horizontal = 12.dp)
-                  .padding(bottom = 240.dp)
-                  .fillMaxWidth()
-          )
-        }
-      }
     }
   }
 }
