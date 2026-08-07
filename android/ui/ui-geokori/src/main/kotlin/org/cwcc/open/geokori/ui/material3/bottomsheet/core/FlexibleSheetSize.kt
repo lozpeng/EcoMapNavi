@@ -15,11 +15,11 @@ import kotlin.math.min
  */
 @Immutable
 public data class FlexibleSheetSize(
-  public val fullyExpanded: Float = 1.0f,
-  public val intermediatelyExpanded: Float = 0.5f,
-  public val slightlyExpanded: Float = 0.25f,
-  public val collapsedHeight: Float = 80f,
-  public val initOffSet:Float = 220f,
+  public val fullyExpanded: Float = 1.0f,  //全展开高度比例
+  public val intermediatelyExpanded: Float = 0.5f,  //中度展开高度比例
+  public val slightlyExpanded: Float = 0.25f,     //轻度打开高度比例
+  public val collapsedHeight: Float = 80f,        //关闭高度
+  public val initOffSet:Float = 220f,             //初始化偏移量
 ) {
   /**
    * Returns true if any of the size values use wrap content mode.

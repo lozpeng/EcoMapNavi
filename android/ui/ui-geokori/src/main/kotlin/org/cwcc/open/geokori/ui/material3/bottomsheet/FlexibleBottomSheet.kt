@@ -353,51 +353,24 @@ public fun FlexibleBottomSheet(
       }
     }
   }
-
-  // ========== 模态 vs 非模态分发 ==========
-  if (sheetState.isModal) {
-    FlexibleBottomSheetPopup(
-        onDismissRequest = {
-          when (sheetState.currentValue) {
-            FlexibleSheetValue.FullyExpanded if sheetState.hasIntermediatelyExpandedState -> {
-              scope.launch { sheetState.intermediatelyExpand() }
-            }
-            FlexibleSheetValue.IntermediatelyExpanded if sheetState.hasSlightlyExpandedState -> {
-              scope.launch { sheetState.slightlyExpand() }
-            }
-            else -> {
-              scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
-            }
-          }
-          onBackPressed.invoke()
-        },
-        sheetState = sheetState,
-        windowInsets = windowInsets,
-    ) {
-      sheetContent()
-    }
-  } else {
-    // 非模态：直接嵌入 Compose 树，不使用 PopupWindow
     // 触摸在 Surface 以外的透明区域自然透传给下层地图
-    Box(modifier = Modifier.fillMaxSize()) {
-      sheetContent()
-    }
-
-    if (!sheetState.skipHiddenState) {
-      BackHandler {
-        when (sheetState.currentValue) {
-          FlexibleSheetValue.FullyExpanded if sheetState.hasIntermediatelyExpandedState -> {
-            scope.launch { sheetState.intermediatelyExpand() }
-          }
-          FlexibleSheetValue.IntermediatelyExpanded if sheetState.hasSlightlyExpandedState -> {
-            scope.launch { sheetState.slightlyExpand() }
-          }
-          else -> {
-            scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
-          }
+  Box(modifier = Modifier.fillMaxSize()) { sheetContent() }
+  if (!sheetState.skipHiddenState) {
+    BackHandler {
+      when (sheetState.currentValue) {
+        FlexibleSheetValue.FullyExpanded if sheetState.hasIntermediatelyExpandedState -> {
+          scope.launch { sheetState.intermediatelyExpand() }
         }
-        onBackPressed.invoke()
+
+        FlexibleSheetValue.IntermediatelyExpanded if sheetState.hasSlightlyExpandedState -> {
+          scope.launch { sheetState.slightlyExpand() }
+        }
+
+        else -> {
+          scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+        }
       }
+      onBackPressed.invoke()
     }
   }
 

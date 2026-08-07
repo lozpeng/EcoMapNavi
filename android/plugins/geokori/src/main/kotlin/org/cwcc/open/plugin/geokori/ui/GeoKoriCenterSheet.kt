@@ -48,6 +48,22 @@ import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetState
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetValue
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.rememberFlexibleBottomSheetState
 
+
+@Composable
+fun rememberGeoKoriModalSheetState(
+    initialValue: FlexibleSheetValue = FlexibleSheetValue.SlightlyExpanded,
+) = rememberFlexibleBottomSheetState(
+    flexibleSheetSize = FlexibleSheetSize(
+        fullyExpanded = 0.85f,
+        intermediatelyExpanded = 0.4f,
+        slightlyExpanded = 0.12f,
+    ),
+    isModal = false,  //非模态
+    skipHiddenState = false,
+    allowNestedScroll = true,
+    initialValue = initialValue,
+    skipSlightlyExpanded = false,
+)
 /**
  * GeoKoriCenter底部 Sheet + 详情弹窗一体化组件。
  *
@@ -63,17 +79,7 @@ import org.cwcc.open.geokori.ui.material3.bottomsheet.core.rememberFlexibleBotto
 @Composable
 fun GeoKoriCenterSheet(
     modifier: Modifier = Modifier,
-    sheetState: FlexibleSheetState = rememberFlexibleBottomSheetState(
-        flexibleSheetSize = FlexibleSheetSize(
-            fullyExpanded = 0.9f,
-            intermediatelyExpanded = 0.4f,
-            slightlyExpanded = 0.11f,
-        ),
-        isModal = false,  // 或 true，根据你的选择
-        skipSlightlyExpanded = false,
-        skipHiddenState = true,
-        allowNestedScroll = true,
-    ),
+    sheetState: FlexibleSheetState = rememberGeoKoriModalSheetState(),
     quickActions: List<QuickAction> = defaultQuickActions(),
     poiList: List<PoiItem> = defaultPoiList(),
     // 新增：目的地相关参数，替代内部硬编码的 sceneState
@@ -88,6 +94,7 @@ fun GeoKoriCenterSheet(
 ) {
   // ========== 内部自治状态 ==========
   var selectedPoi by remember { mutableStateOf<PoiItem?>(null) }
+  //前一页面状态
   var previousSheetValue by remember { mutableStateOf<FlexibleSheetValue?>(null) }
 
   // ========== Sheet 与弹窗状态联动 ==========

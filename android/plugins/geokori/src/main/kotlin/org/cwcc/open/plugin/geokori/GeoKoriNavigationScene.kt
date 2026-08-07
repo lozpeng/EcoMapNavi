@@ -17,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,12 +34,15 @@ import com.stadiamaps.ferrostar.composeui.config.withCustomOverlayView
 import com.stadiamaps.ferrostar.composeui.config.withSpeedLimitStyle
 import com.stadiamaps.ferrostar.composeui.runtime.KeepScreenOnDisposableEffect
 import com.stadiamaps.ferrostar.composeui.views.components.speedlimit.SignageStyle
+import com.stadiamaps.ferrostar.maplibreui.NavigationMapClickHandler
 import com.stadiamaps.ferrostar.maplibreui.NavigationMapClickResult
 import com.stadiamaps.ferrostar.maplibreui.runtime.rememberNavigationMapState
 import com.stadiamaps.ferrostar.maplibreui.views.DynamicallyOrientingNavigationView
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.buildJsonObject
 import org.cwcc.open.geokori.ui.material3.bottomsheet.FlexibleBottomSheet
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetSize
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetState
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetValue
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.rememberFlexibleBottomSheetState
 import org.cwcc.open.plugin.geokori.ui.BottomSheetContent
@@ -50,6 +54,7 @@ import org.cwcc.open.plugin.geokori.ui.PoiItem
 import org.cwcc.open.plugin.geokori.ui.QuickAction
 import org.cwcc.open.plugin.geokori.ui.defaultPoiList
 import org.cwcc.open.plugin.geokori.ui.defaultQuickActions
+import org.cwcc.open.plugin.geokori.ui.rememberGeoKoriModalSheetState
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.map.MapOptions
@@ -121,6 +126,9 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
   val sceneState by viewModel.sceneState.collectAsState()
   val navigationMapState = rememberNavigationMapState()
   var destinationPreviewTopPaddingPx by remember { mutableStateOf(0) }
+  val geoKoriCentreState = rememberGeoKoriModalSheetState()
+  val scope = rememberCoroutineScope()
+
   DestinationSelectionCameraEffect(
       selectedDestination = sceneState.selectedDestination,
       destinationSheetHeightPx = sceneState.destinationSheetHeightPx,
@@ -134,8 +142,7 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
       navigationMapState = navigationMapState,
       viewModel = viewModel,
       config = VisualNavigationViewConfig.Default().withSpeedLimitStyle(SignageStyle.MUTCD),
-      views =
-          NavigationViewComponentBuilder.Default()
+      views = NavigationViewComponentBuilder.Default()
               .withCustomOverlayView(
                   customOverlayView = { modifier ->
                     NotNavigatingOverlay(
@@ -152,9 +159,22 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
             "DemoNavigationScene",
             "Long press at lat=${position.lat}, lng=${position.lng}, screen=$screenPosition",
         )
+
         viewModel.selectDestination(position)
         NavigationMapClickResult.Consume
       },
+      onMapClick = {position, screenPosition ->
+        scope.launch {
+          when(geoKoriCentreState.currentValue)
+          {
+            FlexibleSheetValue.Hidden->geoKoriCentreState.slightlyExpand()
+            else -> {
+              geoKoriCentreState.hide()
+            }
+          }
+        }
+        NavigationMapClickResult.Consume
+      } ,
       mapOptions =
           MapOptions(
               ornamentOptions =
@@ -168,44 +188,7 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
   ) {
     DemoDroppedPinOverlay(sceneState.droppedPin)
   }
-  //===========底部弹出框
-  var targetValue by remember { mutableStateOf(FlexibleSheetValue.IntermediatelyExpanded) }
-  var selectedPoi by remember { mutableStateOf<PoiItem?>(null) }
-// 关键：记住弹出卡片前的 BottomSheet 状态，关闭后恢复
-  var previousSheetValue by remember { mutableStateOf<FlexibleSheetValue?>(null) }
-  val sheetState = rememberFlexibleBottomSheetState(
-      flexibleSheetSize = FlexibleSheetSize(
-          fullyExpanded = 0.9f,
-          intermediatelyExpanded = 0.5f,
-          slightlyExpanded = 0.1f,
-      ),
-      isModal = false,
-      skipSlightlyExpanded = false,
-      skipHiddenState = true,
-      allowNestedScroll = true,
-  )
 
-// ========== 核心：选中 POI 时自动收起 BottomSheet，关闭后恢复 ==========
-  LaunchedEffect(selectedPoi) {
-    if (selectedPoi != null) {
-      // 首次弹出时记录当前状态
-      if (previousSheetValue == null) {
-        previousSheetValue = sheetState.currentValue
-      }
-      // 强制收起到 SlightlyExpanded
-      if (sheetState.currentValue != FlexibleSheetValue.SlightlyExpanded) {
-        sheetState.slightlyExpand()
-      }
-    } else {
-      // 卡片关闭后恢复到之前记住的状态
-      previousSheetValue?.let { prev ->
-        if (sheetState.currentValue != prev) {
-          sheetState.animateTo(prev)
-        }
-        previousSheetValue = null
-      }
-    }
-  }
   if (sceneState.isDestinationSheetVisible) {
     sceneState.selectedDestination?.let { destination ->
       DestinationSelectionBottomSheet(
@@ -218,21 +201,22 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
     }
   }
   else
-  GeoKoriCenterSheet(
-      quickActions = defaultQuickActions(),
-      poiList = defaultPoiList(), // 自定义你的 POI 数据
-      onPoiSelected = { poi ->
-        //viewModel.trackPoiClick(poi)
-      },
-      onPoiNavigate = { poi ->
-        //viewModel.startNavigation(poi)
-      },
-      onQuickActionClick = { action ->
-        //viewModel.handleQuickAction(action)
-      },
-      onPoiDetailClose = {
-        // 可选：埋点、恢复 UI 等
-      })
+    GeoKoriCenterSheet(
+        sheetState = geoKoriCentreState,
+        quickActions = defaultQuickActions(),
+        poiList = defaultPoiList(), // 自定义你的 POI 数据
+        onPoiSelected = { poi ->
+          //viewModel.trackPoiClick(poi)
+        },
+        onPoiNavigate = { poi ->
+          //viewModel.startNavigation(poi)
+        },
+        onQuickActionClick = { action ->
+          //viewModel.handleQuickAction(action)
+        },
+        onPoiDetailClose = {
+          // 可选：埋点、恢复 UI 等
+        })
 }
 
 @Composable

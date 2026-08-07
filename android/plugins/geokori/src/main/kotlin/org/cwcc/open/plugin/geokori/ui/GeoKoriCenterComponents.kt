@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.DirectionsTransit
 import androidx.compose.material.icons.filled.LocalHospital
+import androidx.compose.material.icons.filled.LocationSearching
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.cwcc.open.plugin.geokori.AppModule
 
 // ==================== 搜索栏 V2 ====================
 @Composable
@@ -105,21 +107,35 @@ fun SearchHeaderV2() {
     Spacer(modifier = Modifier.height(8.dp))
 
     Row(verticalAlignment = Alignment.CenterVertically) {
+      Spacer(modifier = Modifier.width(8.dp))
       WeatherChip(icon = Icons.Default.WbSunny, text = "26°C 晴", bg = Color(0xFFFFF3E0))
       Spacer(modifier = Modifier.width(8.dp))
       WeatherChip(icon = Icons.Default.Air, text = "AQI 45 优", bg = Color(0xFFE8F5E9))
       Spacer(modifier = Modifier.width(8.dp))
       WeatherChip(icon = Icons.Default.Traffic, text = "路况畅通", bg = Color(0xFFE3F2FD))
+      Spacer(modifier = Modifier.width(8.dp))
+      WeatherChip(icon = Icons.Default.LocationSearching, text = "我在哪", bg = Color(0xFFE3F2FD), onClick = {
+        AppModule.locationProvider.disableSimulation()
+        //AppModule.locationProvider.lastLocation()
+      })
     }
   }
 }
 
 @Composable
-fun WeatherChip(icon: ImageVector, text: String, bg: Color) {
+fun WeatherChip(icon: ImageVector,
+                text: String,
+                bg: Color,
+                onClick: () -> Unit = {}) {
   Surface(
       shape = RoundedCornerShape(16.dp),
       color = bg.copy(alpha = 0.9f),
       modifier = Modifier.height(28.dp)
+          .clickable(
+          interactionSource = remember { MutableInteractionSource() },
+          indication = null,  // 去掉默认 ripple，保持 chip 的简洁感；如需 ripple 可删除这行
+          onClick = onClick
+      )
   ) {
     Row(
         modifier = Modifier.padding(horizontal = 10.dp),
