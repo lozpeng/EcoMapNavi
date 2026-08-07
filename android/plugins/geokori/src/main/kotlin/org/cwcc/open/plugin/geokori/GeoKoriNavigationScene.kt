@@ -1,6 +1,7 @@
 package org.cwcc.open.plugin.geokori
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
@@ -16,18 +17,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -44,12 +49,13 @@ import com.stadiamaps.ferrostar.maplibreui.views.DynamicallyOrientingNavigationV
 import org.cwcc.open.plugin.geokori.ui.DestinationSelectionBottomSheet
 import org.cwcc.open.plugin.geokori.ui.DestinationSelectionCameraEffect
 import kotlinx.serialization.json.buildJsonObject
-import org.cwcc.open.plugin.geokori.ui.BottomSheetContentV2
-import org.cwcc.open.plugin.geokori.ui.ImmersiveBottomSheet
+import org.cwcc.open.geokori.ui.material3.bottomsheet.FlexibleBottomSheet
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetSize
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetValue
+import org.cwcc.open.geokori.ui.material3.bottomsheet.core.rememberFlexibleBottomSheetState
+import org.cwcc.open.plugin.geokori.ui.BottomSheetContentV3
 import org.cwcc.open.plugin.geokori.ui.PoiDetailCardV2
 import org.cwcc.open.plugin.geokori.ui.PoiItem
-import org.cwcc.open.plugin.geokori.ui.SheetAnchor
-import org.cwcc.open.plugin.geokori.ui.rememberImmersiveSheetState
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.map.MapOptions
@@ -67,9 +73,7 @@ import uniffi.ferrostar.GeographicCoordinate
 fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel) {
   // Keeps the screen on at consistent brightness while this Composable is in the view hierarchy.
   KeepScreenOnDisposableEffect()
-
   val context = LocalContext.current
-
   LaunchedEffect(Unit) {
     viewModel.errorEvent.collect { message ->
       Toast.makeText(context, message, Toast.LENGTH_LONG).show()
@@ -130,7 +134,6 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
       navigationMapState = navigationMapState,
   )
 
-
   DynamicallyOrientingNavigationView(
       modifier = Modifier.fillMaxSize(),
       baseStyle = BaseStyle.Uri(AppModule.mapStyleUrl),
@@ -171,18 +174,75 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
   ) {
     DemoDroppedPinOverlay(sceneState.droppedPin)
   }
+  var targetValue by remember { mutableStateOf(FlexibleSheetValue.IntermediatelyExpanded) }
+  var selectedPoi by remember { mutableStateOf<PoiItem?>(null) }
 
-  if (sceneState.isDestinationSheetVisible) {
-    sceneState.selectedDestination?.let { destination ->
-      DestinationSelectionBottomSheet(
-          destination = destination,
-          onClose = { viewModel.clearSelectedDestination() },
-          onStartNavigation = { viewModel.startSelectedDestinationNavigation() },
-          onSheetHeightChanged = viewModel::setDestinationSheetHeight,
-          onAddGeoNote = { viewModel.addDestinationAsGeoNote(destination.coordinate) },
-      )
+  val sheetState = rememberFlexibleBottomSheetState(
+      flexibleSheetSize = FlexibleSheetSize(
+          fullyExpanded = 0.9f,
+          intermediatelyExpanded = 0.5f,
+          slightlyExpanded = 0.1f,
+      ),
+      isModal = false,
+      skipSlightlyExpanded = false,
+      skipHiddenState = true,
+      allowNestedScroll = true,
+  )
+
+  FlexibleBottomSheet(
+      sheetState = sheetState,
+      containerColor = Color.White,
+      onTargetChanges = { targetValue = it },
+      dragHandle = null,
+      windowInsets = WindowInsets.systemBars,
+      modifier = Modifier.fillMaxSize()
+  ) {
+    // 用 Box 包裹，允许内容重叠
+    Box(modifier = Modifier.fillMaxSize()) {
+      // ========== 底层：BottomSheet 主要内容 ==========
+      if (sceneState.isDestinationSheetVisible) {
+        sceneState.selectedDestination?.let { destination ->
+          DestinationSelectionBottomSheet(
+              destination = destination,
+              onClose = { viewModel.clearSelectedDestination() },
+              onStartNavigation = { viewModel.startSelectedDestinationNavigation() },
+              onSheetHeightChanged = viewModel::setDestinationSheetHeight,
+              onAddGeoNote = { viewModel.addDestinationAsGeoNote(destination.coordinate) },
+          )
+        }
+      } else {
+        BottomSheetContentV3(
+            targetValue = targetValue,
+            sheetState = sheetState,
+            onPoiClick = { poi ->
+              selectedPoi = poi
+            },
+        )
+      }
+      // ========== 顶层：POI 详情浮层（后声明 = Z-order 更高） ==========
+      androidx.compose.animation.AnimatedVisibility(
+          visible = selectedPoi != null && targetValue != FlexibleSheetValue.SlightlyExpanded,
+          enter = slideInVertically { it } + fadeIn(),
+          exit = slideOutVertically { it } + fadeOut(),
+          modifier = Modifier.align(Alignment.BottomCenter)
+      ) {
+          selectedPoi?.let { poi ->
+            PoiDetailCardV2(
+                poi = poi,
+                onClose = { selectedPoi = null },
+                onNavigate = {
+                  // 触发导航逻辑
+                },
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .padding(bottom = 240.dp)
+                    .fillMaxWidth()
+            )
+          }
+      }
     }
   }
+
 }
 
 @Composable

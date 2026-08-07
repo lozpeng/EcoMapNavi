@@ -183,6 +183,7 @@ public class FlexibleSheetState(
     if (!isModal) {
       animateTo(targetValue = FlexibleSheetValue.FullyExpanded, animSpec = animateSpec)
       animateTo(targetValue = FlexibleSheetValue.FullyExpanded, animSpec = animateSpec)
+
     } else {
       animateTo(targetValue = FlexibleSheetValue.FullyExpanded, animSpec = animateSpec)
     }

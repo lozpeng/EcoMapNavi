@@ -153,16 +153,20 @@ public fun FlexibleBottomSheet(
 
   FlexibleBottomSheetPopup(
       onDismissRequest = {
-        if (sheetState.currentValue == FlexibleSheetValue.FullyExpanded &&
-          sheetState.hasIntermediatelyExpandedState
-        ) {
-          scope.launch { sheetState.intermediatelyExpand() }
-        } else if (sheetState.currentValue == FlexibleSheetValue.IntermediatelyExpanded &&
-          sheetState.hasSlightlyExpandedState
-        ) {
-          scope.launch { sheetState.slightlyExpand() }
-        } else { // Is expanded without collapsed state or is collapsed.
-          scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+        when (sheetState.currentValue) {
+          FlexibleSheetValue.FullyExpanded
+            if sheetState.hasIntermediatelyExpandedState -> {
+                scope.launch { sheetState.intermediatelyExpand() }
+          }
+
+          FlexibleSheetValue.IntermediatelyExpanded
+            if sheetState.hasSlightlyExpandedState -> {
+                scope.launch { sheetState.slightlyExpand() }
+          }
+
+          else -> {
+                scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+          }
         }
         onBackPressed.invoke()
       },
@@ -211,13 +215,17 @@ public fun FlexibleBottomSheet(
         Modifier.fillMaxSize()
       }
     } else {
-      Modifier.height(
-          if (isDragging || isAnimationRunning) {
-            fullyExpandedHeight
-          } else {
-            expectedSheetSize
-          },
-      )
+//      Modifier.height(
+//          if (isDragging || isAnimationRunning) {
+//            fullyExpandedHeight
+//          } else {
+//            expectedSheetSize
+//          },
+//      )
+      //尝试修复UI闪烁的问题
+      // 非模态 Sheet 始终使用全高，通过 offset 控制显示区域
+      // 避免拖动结束时高度突变导致内容重新测量闪烁
+      Modifier.fillMaxWidth().height(fullyExpandedHeight)
     }
 
     // Hide sheet until content is measured when using wrap content mode
@@ -261,19 +269,22 @@ public fun FlexibleBottomSheet(
                 val offset = sheetState
                     .requireOffset()
                     .toInt()
-
                 IntOffset(
                     x = 0,
-                    y = if (sheetState.isModal) {
-                      offset
-                    } else {
-                      if (isDragging || isAnimationRunning) {
-                        offset
-                      } else {
-                        0
-                      }
-                    },
+                    y = offset, // 始终使用 offset，不再区分模态/非模态
                 )
+//                IntOffset(
+//                    x = 0,
+//                    y = if (sheetState.isModal) {
+//                      offset
+//                    } else {
+//                      if (isDragging || isAnimationRunning) {
+//                        offset
+//                      } else {
+//                        0
+//                      }
+//                    },
+//                )
               }
               .nestedScroll(
                   remember(sheetState) {
