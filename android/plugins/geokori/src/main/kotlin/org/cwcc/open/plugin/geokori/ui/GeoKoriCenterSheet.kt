@@ -66,8 +66,8 @@ fun GeoKoriCenterSheet(
     sheetState: FlexibleSheetState = rememberFlexibleBottomSheetState(
         flexibleSheetSize = FlexibleSheetSize(
             fullyExpanded = 0.9f,
-            intermediatelyExpanded = 0.5f,
-            slightlyExpanded = 0.1f,
+            intermediatelyExpanded = 0.4f,
+            slightlyExpanded = 0.11f,
         ),
         isModal = false,  // 或 true，根据你的选择
         skipSlightlyExpanded = false,
@@ -306,7 +306,7 @@ fun defaultQuickActions(): List<QuickAction> = listOf(
     QuickAction(Icons.Default.LocalPolice, "执法", Color(0xFFFFF3E0), Color(0xFFEF6C00)),
     QuickAction(Icons.Default.Flag, "履约", Color(0xFFE0F2F1), Color(0xFF00695C)),
     QuickAction(Icons.Default.BugReport, "名录-动物", Color(0xFFE0F2F1), Color(0xFF00695C)),
-    QuickAction(Icons.Filled.AcUnit, "名录-植物", Color(0xFFE0F2F1), Color(0xFF00695C)),
+    QuickAction(Icons.Filled.AcUnit, "名录-植物", Color(0xFFFFFDE7), Color(0xFF2E7D32)),
     QuickAction(Icons.Filled.ArtTrack, "名录-三有", Color(0xFFE0F2F1), Color(0xFF00695C)),
     QuickAction(null, "CITES附录", Color(0xFFE0F2F1), Color(0xFF00695C)),
 )
