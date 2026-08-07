@@ -7,10 +7,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -19,14 +16,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.ContextCompat
 import com.stadiamaps.ferrostar.composeui.config.NavigationViewComponentBuilder
 import com.stadiamaps.ferrostar.composeui.config.VisualNavigationViewConfig
@@ -34,27 +27,18 @@ import com.stadiamaps.ferrostar.composeui.config.withCustomOverlayView
 import com.stadiamaps.ferrostar.composeui.config.withSpeedLimitStyle
 import com.stadiamaps.ferrostar.composeui.runtime.KeepScreenOnDisposableEffect
 import com.stadiamaps.ferrostar.composeui.views.components.speedlimit.SignageStyle
-import com.stadiamaps.ferrostar.maplibreui.NavigationMapClickHandler
 import com.stadiamaps.ferrostar.maplibreui.NavigationMapClickResult
 import com.stadiamaps.ferrostar.maplibreui.runtime.rememberNavigationMapState
 import com.stadiamaps.ferrostar.maplibreui.views.DynamicallyOrientingNavigationView
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.buildJsonObject
-import org.cwcc.open.geokori.ui.material3.bottomsheet.FlexibleBottomSheet
-import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetSize
-import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetState
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetValue
-import org.cwcc.open.geokori.ui.material3.bottomsheet.core.rememberFlexibleBottomSheetState
-import org.cwcc.open.plugin.geokori.ui.BottomSheetContent
 import org.cwcc.open.plugin.geokori.ui.DestinationSelectionBottomSheet
 import org.cwcc.open.plugin.geokori.ui.DestinationSelectionCameraEffect
 import org.cwcc.open.plugin.geokori.ui.GeoKoriCenterSheet
-import org.cwcc.open.plugin.geokori.ui.PoiDetailCardV2
-import org.cwcc.open.plugin.geokori.ui.PoiItem
-import org.cwcc.open.plugin.geokori.ui.QuickAction
 import org.cwcc.open.plugin.geokori.ui.defaultPoiList
 import org.cwcc.open.plugin.geokori.ui.defaultQuickActions
-import org.cwcc.open.plugin.geokori.ui.rememberGeoKoriModalSheetState
+import org.cwcc.open.plugin.geokori.ui.rememberGeoKoriSheetState
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.map.MapOptions
@@ -126,7 +110,7 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
   val sceneState by viewModel.sceneState.collectAsState()
   val navigationMapState = rememberNavigationMapState()
   var destinationPreviewTopPaddingPx by remember { mutableStateOf(0) }
-  val geoKoriCentreState = rememberGeoKoriModalSheetState()
+  val geoKoriCentreState = rememberGeoKoriSheetState()
   val scope = rememberCoroutineScope()
 
   DestinationSelectionCameraEffect(
@@ -165,11 +149,14 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
       },
       onMapClick = {position, screenPosition ->
         scope.launch {
-          when(geoKoriCentreState.currentValue)
+          if (!geoKoriCentreState.skipHiddenState)
           {
-            FlexibleSheetValue.Hidden->geoKoriCentreState.slightlyExpand()
-            else -> {
-              geoKoriCentreState.hide()
+            when(geoKoriCentreState.currentValue)
+            {
+              FlexibleSheetValue.Hidden->geoKoriCentreState.slightlyExpand()
+              else -> {
+                geoKoriCentreState.hide()
+              }
             }
           }
         }

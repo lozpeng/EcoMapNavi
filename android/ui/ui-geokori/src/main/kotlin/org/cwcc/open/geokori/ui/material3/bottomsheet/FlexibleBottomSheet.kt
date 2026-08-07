@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Surface
@@ -33,7 +34,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
-
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.dismiss
@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleBottomSheetPopup
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetState
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetValue
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.Scrim
@@ -68,10 +67,6 @@ import org.cwcc.open.geokori.ui.material3.bottomsheet.core.wrapContentMeasureCon
  * app functionality when they appear, and remaining on screen until confirmed, dismissed, or a
  * required action has been taken.
  *
- * ![Bottom sheet image](https://developer.android.com/images/reference/androidx/compose/material3/bottom_sheet.png)
- *
- * A simple example of a flexible bottom sheet looks like this:
- *
  * @param onDismissRequest Executes when the user clicks outside of the bottom sheet, after sheet
  * animates to [FlexibleSheetValue.Hidden].
  * @param modifier Optional [Modifier] for the bottom sheet.
@@ -87,6 +82,8 @@ import org.cwcc.open.geokori.ui.material3.bottomsheet.core.wrapContentMeasureCon
  * @param dragHandle Optional visual marker to swipe the bottom sheet.
  * @param windowInsets window insets to be passed to the bottom sheet window via [PaddingValues]
  * params.
+ * @param sheetWidth Fixed width for the sheet. If null, defaults to fillMaxWidth with max 640dp.
+ * @param sheetHorizontalAlignment Horizontal alignment of the sheet within its container.
  * @param content The content to be displayed inside the bottom sheet.
  */
 @Composable
@@ -103,6 +100,8 @@ public fun FlexibleBottomSheet(
     scrimColor: Color = BottomSheetDefaults.ScrimColor,
     dragHandle: @Composable (() -> Unit)? = { BottomSheetDefaults.DragHandle() },
     windowInsets: WindowInsets = BottomSheetDefaults.windowInsets,
+    sheetWidth: Dp? = null,
+    sheetHorizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     content: @Composable ColumnScope.() -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -151,7 +150,22 @@ public fun FlexibleBottomSheet(
         ).size
   }
 
-  // ========== 提取内容体：BoxScope 扩展，供模态/非模态复用 ==========
+  // Map Alignment.Horizontal to BoxScope Alignment
+  val boxAlignment = when (sheetHorizontalAlignment) {
+    Alignment.Start -> Alignment.BottomStart
+    Alignment.End -> Alignment.BottomEnd
+    else -> Alignment.BottomCenter
+  }
+
+  val widthModifier = if (sheetWidth != null) {
+    Modifier.width(sheetWidth)
+  } else {
+    Modifier
+        .widthIn(max = BottomSheetMaxWidth)
+        .fillMaxWidth()
+  }
+
+  // Extract content body as BoxScope extension for reuse by both modal and non-modal modes
   val sheetContent: @Composable BoxScope.() -> Unit = {
     var isDragging by remember { mutableStateOf(false) }
     val isAnimationRunning = sheetState.swipeableState.isAnimationRunning
@@ -159,11 +173,13 @@ public fun FlexibleBottomSheet(
     val screenHeightPxSize = screenHeightSize.toPx()
     val density = LocalDensity.current
 
+    // Track measured content height for wrap content mode
     var contentHeightPx by remember { mutableStateOf(0f) }
     val contentHeightDp = with(density) { contentHeightPx.toDp() }
 
     val flexibleSheetSize = sheetState.flexibleSheetSize
 
+    // Resolve sizes considering wrap content mode
     val resolvedFullyExpanded = flexibleSheetSize.fullyExpanded
         .resolveSheetSize(screenHeightPxSize, contentHeightPx)
     val resolvedIntermediatelyExpanded = flexibleSheetSize.intermediatelyExpanded
@@ -189,7 +205,7 @@ public fun FlexibleBottomSheet(
       }
     } else {
       // 非模态：容器始终使用全高，通过 offset 控制显示区域
-      // 避免拖动结束时高度突变导致闪烁
+      // 避免拖动结束时高度突变导致内容重新测量闪烁
       // 在嵌入模式下，透明区域不拦截下层触摸（同一 Compose 树自然透传）
       Modifier.fillMaxWidth().height(fullyExpandedHeight)
     }
@@ -197,6 +213,7 @@ public fun FlexibleBottomSheet(
     val isContentMeasured = contentHeightPx > 0f
     val needsContentMeasurement = flexibleSheetSize.hasWrapContent && !isContentMeasured
 
+    // 模态遮罩只在模态时显示
     if (sheetState.isModal) {
       Scrim(
           color = scrimColor,
@@ -207,17 +224,25 @@ public fun FlexibleBottomSheet(
 
     BoxWithConstraints(
         modifier = sheetModifier
-            .align(Alignment.BottomCenter), // ← 现在可以解析：sheetContent 是 BoxScope.() -> Unit
+            .align(boxAlignment)
+            .graphicsLayer {
+              alpha = when {
+                needsContentMeasurement -> 0f
+                sheetState.targetValue == FlexibleSheetValue.Hidden &&
+                    !isDragging && !isAnimationRunning -> 0f
+                else -> 1f
+              }
+            },
     ) {
       val constraintHeight = constraints.maxHeight.toFloat()
       val bottomSheetPaneTitle = "Bottom Sheet"
       Surface(
           modifier = modifier
-              .widthIn(max = BottomSheetMaxWidth)
-              .fillMaxWidth()
+              .then(widthModifier)
               .fillMaxHeight()
-              .align(Alignment.BottomCenter)
+              .align(boxAlignment)
               .semantics { paneTitle = bottomSheetPaneTitle }
+              // 使用 offsetOrNull 避免首次 layout 前崩溃
               .offset {
                 val offset = sheetState.offsetOrNull
                 IntOffset(
@@ -233,7 +258,9 @@ public fun FlexibleBottomSheet(
                           orientation = Orientation.Vertical,
                           screenHeight = screenHeightSize.value,
                           onFling = settleToDismiss,
-                          onDragging = { isDragging = it },
+                          onDragging = {
+                            isDragging = it
+                          },
                       )
                     } else {
                       emptySwipeWithinBottomSheetBoundsNestedScrollConnection()
@@ -249,7 +276,9 @@ public fun FlexibleBottomSheet(
                   flexibleSheetSize = sheetState.flexibleSheetSize,
                   isModal = sheetState.isModal,
                   contentHeight = contentHeightPx,
-                  onDragStarted = { isDragging = true },
+                  onDragStarted = {
+                    isDragging = true
+                  },
                   onDragStopped = {
                     isDragging = false
                     settleToDismiss(it)
@@ -353,24 +382,49 @@ public fun FlexibleBottomSheet(
       }
     }
   }
-    // 触摸在 Surface 以外的透明区域自然透传给下层地图
-  Box(modifier = Modifier.fillMaxSize()) { sheetContent() }
-  if (!sheetState.skipHiddenState) {
-    BackHandler {
-      when (sheetState.currentValue) {
-        FlexibleSheetValue.FullyExpanded if sheetState.hasIntermediatelyExpandedState -> {
-          scope.launch { sheetState.intermediatelyExpand() }
-        }
 
-        FlexibleSheetValue.IntermediatelyExpanded if sheetState.hasSlightlyExpandedState -> {
-          scope.launch { sheetState.slightlyExpand() }
+  // 统一嵌入当前 Compose 树，无论模态/非模态
+  // 模态时 Scrim 已在 sheetContent 内部处理，无需额外 PopupWindow
+  // 彻底避免 PopupWindow 隐藏后仍拦截下层触摸的问题
+  Box(modifier = Modifier.fillMaxSize()) {
+    sheetContent()
+    // 返回键处理（模态和非模态共用）
+    if (!sheetState.skipHiddenState) {
+      BackHandler {
+        val current = sheetState.currentValue
+        when {
+          current == FlexibleSheetValue.FullyExpanded && sheetState.hasIntermediatelyExpandedState -> {
+            scope.launch { sheetState.intermediatelyExpand() }
+          }
+          current == FlexibleSheetValue.IntermediatelyExpanded && sheetState.hasSlightlyExpandedState -> {
+            scope.launch { sheetState.slightlyExpand() }
+          }
+          else -> {
+            scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+          }
         }
-
-        else -> {
-          scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+        onBackPressed.invoke()
+      }
+    } else {
+      // skipHiddenState = true 时：返回键只逐级收起，不隐藏
+      BackHandler {
+        val current = sheetState.currentValue
+        when {
+          current == FlexibleSheetValue.FullyExpanded && sheetState.hasIntermediatelyExpandedState -> {
+            scope.launch { sheetState.intermediatelyExpand() }
+          }
+          current == FlexibleSheetValue.IntermediatelyExpanded && sheetState.hasSlightlyExpandedState -> {
+            scope.launch { sheetState.slightlyExpand() }
+          }
+          current == FlexibleSheetValue.SlightlyExpanded -> {
+            // 已是最低可见状态，返回键无操作或触发 onBackPressed
+            onBackPressed.invoke()
+          }
+          else -> {
+            onBackPressed.invoke()
+          }
         }
       }
-      onBackPressed.invoke()
     }
   }
 

@@ -37,7 +37,9 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
@@ -48,70 +50,96 @@ import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetState
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetValue
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.rememberFlexibleBottomSheetState
 
-
+/**
+ * 为 GeoKori 地图场景预配置的 BottomSheet State。
+ * 默认：非模态、三档展开、初始微展开、允许嵌套滚动。
+ */
 @Composable
-fun rememberGeoKoriModalSheetState(
+fun rememberGeoKoriSheetState(
     initialValue: FlexibleSheetValue = FlexibleSheetValue.SlightlyExpanded,
-) = rememberFlexibleBottomSheetState(
+    skipHiddenState: Boolean = false,
+    isModal: Boolean = false,
+): FlexibleSheetState = rememberFlexibleBottomSheetState(
     flexibleSheetSize = FlexibleSheetSize(
-        fullyExpanded = 0.85f,
+        fullyExpanded = 0.9f,
         intermediatelyExpanded = 0.4f,
-        slightlyExpanded = 0.12f,
+        slightlyExpanded = 0.11f,
     ),
-    isModal = false,  //非模态
-    skipHiddenState = false,
+    isModal = isModal,
+    skipSlightlyExpanded = false,
+    skipHiddenState = skipHiddenState,
     allowNestedScroll = true,
     initialValue = initialValue,
-    skipSlightlyExpanded = false,
 )
+
 /**
- * GeoKoriCenter底部 Sheet + 详情弹窗一体化组件。
+ * GeoKori 底部 Sheet + 详情弹窗一体化组件。
  *
  * @param modifier 外部修饰器
- * @param sheetState BottomSheet 状态，可由外部传入以精细控制；默认提供非模态三档配置
- * @param quickActions 快捷操作按钮列表（内部自动处理折叠态/展开态展示数量）
+ * @param sheetState BottomSheet 状态，可由外部传入以精细控制
+ * @param quickActions 快捷操作按钮列表
  * @param poiList POI 数据列表
- * @param onPoiSelected POI 被点击选中时回调（此时内部已自动收起 Sheet）
+ * @param destination 目的地数据（用于显示目的地选择 Sheet）
+ * @param isDestinationSheetVisible 是否显示目的地选择内容
+ * @param destinationContent 目的地选择的内容 Composable
+ * @param shouldCollapseSheetOnPoiSelect 点击 POI 时是否自动收起 Sheet
+ * @param sheetWidth Sheet 固定宽度，null 则根据屏幕尺寸自适应
+ * @param sheetHorizontalAlignment Sheet 水平对齐，null 则根据屏幕尺寸自适应
+ * @param onPoiSelected POI 被点击选中时回调
  * @param onPoiNavigate 详情卡片内点击"路线"时回调
  * @param onQuickActionClick 快捷操作被点击时回调
- * @param onPoiDetailClose 详情卡片关闭时回调（含点击外部、返回键、关闭按钮）
+ * @param onPoiDetailClose 详情卡片关闭时回调
+ * @param onSheetDismiss 点击遮罩/返回时回调
  */
 @Composable
 fun GeoKoriCenterSheet(
     modifier: Modifier = Modifier,
-    sheetState: FlexibleSheetState = rememberGeoKoriModalSheetState(),
+    sheetState: FlexibleSheetState = rememberGeoKoriSheetState(),
     quickActions: List<QuickAction> = defaultQuickActions(),
     poiList: List<PoiItem> = defaultPoiList(),
-    // 新增：目的地相关参数，替代内部硬编码的 sceneState
-    destination: Any? = null,  // 你的 Destination 类型，这里用 Any? 示例
+    destination: Any? = null,
     isDestinationSheetVisible: Boolean = false,
     destinationContent: @Composable () -> Unit = {},
+    shouldCollapseSheetOnPoiSelect: Boolean = true,
+    sheetWidth: Dp? = null,
+    sheetHorizontalAlignment: Alignment.Horizontal? = null,
     onPoiSelected: (PoiItem) -> Unit = {},
     onPoiNavigate: (PoiItem) -> Unit = {},
     onQuickActionClick: (QuickAction) -> Unit = {},
     onPoiDetailClose: () -> Unit = {},
-    onSheetDismiss: () -> Unit = {},  // 点击遮罩/返回时
+    onSheetDismiss: () -> Unit = {},
 ) {
   // ========== 内部自治状态 ==========
   var selectedPoi by remember { mutableStateOf<PoiItem?>(null) }
-  //前一页面状态
   var previousSheetValue by remember { mutableStateOf<FlexibleSheetValue?>(null) }
+
+  // ========== 屏幕尺寸自适应 ==========
+  val configuration = LocalConfiguration.current
+  val screenWidth = configuration.screenWidthDp.dp
+  val isWideScreen = screenWidth > 600.dp
+
+  // 手机：全宽 + 居中；大屏：固定 360dp + 靠左
+  val adaptiveWidth = sheetWidth ?: if (isWideScreen) 360.dp else null
+  val adaptiveAlignment = sheetHorizontalAlignment
+    ?: if (isWideScreen) Alignment.Start else Alignment.CenterHorizontally
 
   // ========== Sheet 与弹窗状态联动 ==========
   LaunchedEffect(selectedPoi) {
-    if (selectedPoi != null) {
-      if (previousSheetValue == null) {
-        previousSheetValue = sheetState.currentValue
-      }
-      if (sheetState.currentValue != FlexibleSheetValue.SlightlyExpanded) {
-        sheetState.slightlyExpand()
-      }
-    } else {
-      previousSheetValue?.let { prev ->
-        if (sheetState.currentValue != prev) {
-          sheetState.animateTo(prev)
+    if (shouldCollapseSheetOnPoiSelect) {
+      if (selectedPoi != null) {
+        if (previousSheetValue == null) {
+          previousSheetValue = sheetState.currentValue
         }
-        previousSheetValue = null
+        if (sheetState.currentValue != FlexibleSheetValue.SlightlyExpanded) {
+          sheetState.slightlyExpand()
+        }
+      } else {
+        previousSheetValue?.let { prev ->
+          if (sheetState.currentValue != prev) {
+            sheetState.animateTo(prev)
+          }
+          previousSheetValue = null
+        }
       }
     }
   }
@@ -120,14 +148,15 @@ fun GeoKoriCenterSheet(
   FlexibleBottomSheet(
       sheetState = sheetState,
       containerColor = Color.White,
-      onTargetChanges = { /* ... */ },
-      onDismissRequest = onSheetDismiss,  // 使用传入的回调
+      onTargetChanges = { },
+      onDismissRequest = onSheetDismiss,
       dragHandle = null,
       windowInsets = WindowInsets.systemBars,
+      sheetWidth = adaptiveWidth,
+      sheetHorizontalAlignment = adaptiveAlignment,
       modifier = modifier.fillMaxSize()
   ) {
     if (isDestinationSheetVisible && destination != null) {
-      // 调用方提供的目的地内容
       destinationContent()
     } else {
       BottomSheetContent(
@@ -145,14 +174,13 @@ fun GeoKoriCenterSheet(
 
   // ========== 非模态 POI 详情弹窗（屏幕正中央） ==========
   if (selectedPoi != null) {
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cardWidth = (screenWidth * 0.85f).coerceAtMost(360.dp)
 
     Popup(
         alignment = Alignment.Center,
         properties = PopupProperties(
-            focusable = false,              // 非模态：背后地图/BottomSheet 仍可交互
-            dismissOnClickOutside = true,   // 点击卡片外部自动关闭
+            focusable = false,
+            dismissOnClickOutside = true,
             dismissOnBackPress = true,
         ),
         onDismissRequest = {
@@ -160,11 +188,10 @@ fun GeoKoriCenterSheet(
           onPoiDetailClose()
         }
     ) {
-      // 进入/退出动画
       var visible by remember { mutableStateOf(false) }
       LaunchedEffect(Unit) { visible = true }
 
-      val density = androidx.compose.ui.platform.LocalDensity.current
+      val density = LocalDensity.current
       val offsetY by androidx.compose.animation.core.animateIntOffsetAsState(
           targetValue = if (visible) {
             androidx.compose.ui.unit.IntOffset(0, 0)
@@ -201,7 +228,7 @@ fun GeoKoriCenterSheet(
 // ==================== 内部实现 ====================
 
 @Composable
-fun BottomSheetContent(
+private fun BottomSheetContent(
     sheetState: FlexibleSheetState,
     quickActions: List<QuickAction>,
     poiList: List<PoiItem>,
@@ -301,8 +328,9 @@ fun BottomSheetContent(
     Spacer(modifier = Modifier.height(16.dp))
   }
 }
-// ==================== 默认数据（可替换） ====================
-//QuickAction(Icons.Default.Home, "动物", Color(0xFFE3F2FD), Color(0xFF1565C0)),
+
+// ==================== 默认数据 ====================
+
 fun defaultQuickActions(): List<QuickAction> = listOf(
     QuickAction(null, "动物", Color(0xFFE3F2FD), Color(0xFF1565C0)),
     QuickAction(null, "植物", Color(0xFFF3E5F5), Color(0xFF6A1B9A)),
