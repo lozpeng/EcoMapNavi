@@ -1,31 +1,35 @@
 package org.cwcc.open.plugin.geokori.ui
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Directions
+import androidx.compose.material.icons.filled.DirectionsTransit
+import androidx.compose.material.icons.filled.LocalHospital
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Traffic
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -35,37 +39,19 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.util.VelocityTracker
-import androidx.compose.ui.input.pointer.util.addPointerInputChange
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlin.math.absoluteValue
-import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetState
-import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetValue
+
 // ==================== 搜索栏 V2 ====================
 @Composable
 fun SearchHeaderV2() {
@@ -145,80 +131,59 @@ fun WeatherChip(icon: ImageVector, text: String, bg: Color) {
     }
   }
 }
-// 折叠态快捷操作
-@Composable
-fun CollapsedQuickActions() {
-  val actions = remember {
-    listOf(
-        QuickAction(Icons.Default.Home, "回家", Color(0xFFE3F2FD), Color(0xFF1565C0)),
-        QuickAction(Icons.Default.Business, "去公司", Color(0xFFF3E5F5), Color(0xFF6A1B9A)),
-        QuickAction(Icons.Default.Place, "附近", Color(0xFFFFF3E0), Color(0xFFEF6C00)),
-        QuickAction(Icons.Default.Star, "收藏", Color(0xFFFFFDE7), Color(0xFFF9A825)),
-    )
-  }
-  Row(
-      modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 16.dp),
-      horizontalArrangement = Arrangement.SpaceEvenly
-  ) {
-    actions.forEach { QuickActionItem(it) }
-  }
-}
 
-// 展开态快捷操作
+// ==================== QuickActionItem ====================
 @Composable
-fun ExpandedQuickActions() {
-  val actions = remember {
-    listOf(
-        QuickAction(Icons.Default.Home, "回家", Color(0xFFE3F2FD), Color(0xFF1565C0)),
-        QuickAction(Icons.Default.Business, "去公司", Color(0xFFF3E5F5), Color(0xFF6A1B9A)),
-        QuickAction(Icons.Default.Place, "附近", Color(0xFFFFF3E0), Color(0xFFEF6C00)),
-        QuickAction(Icons.Default.Star, "收藏", Color(0xFFFFFDE7), Color(0xFFF9A825)),
-        QuickAction(Icons.Default.LocalParking, "停车", Color(0xFFE8F5E9), Color(0xFF2E7D32)),
-        QuickAction(Icons.Default.LocalGasStation, "加油", Color(0xFFFFEBEE), Color(0xFFC62828)),
-        QuickAction(Icons.Default.Restaurant, "美食", Color(0xFFFFF3E0), Color(0xFFEF6C00)),
-        QuickAction(Icons.Default.Hotel, "酒店", Color(0xFFE0F2F1), Color(0xFF00695C)),
-    )
-  }
-  Column {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-      actions.take(4).forEach { QuickActionItem(it) }
-    }
-    Spacer(modifier = Modifier.height(12.dp))
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-      actions.drop(4).forEach { QuickActionItem(it) }
-    }
-  }
-}
-
-@Composable
-fun QuickActionItem(action: QuickAction) {
+fun QuickActionItem(
+    action: QuickAction,
+    onClick: () -> Unit = {}
+) {
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.clickable { }
+      // 不在 Column 上设置 clickable，避免矩形高亮
   ) {
+    val interactionSource = remember { MutableInteractionSource() }
+
     Box(
         modifier = Modifier
             .size(48.dp)
             .clip(CircleShape)
-            .background(action.containerColor),
+            .background(action.containerColor)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(bounded = true),  // 圆形波纹，限制在 clip 区域内
+                onClick = onClick
+            ),
         contentAlignment = Alignment.Center
     ) {
-      Icon(action.icon, null, tint = action.contentColor, modifier = Modifier.size(24.dp))
+      if (action.icon != null) {
+        Icon(
+            imageVector = action.icon,
+            contentDescription = action.label,
+            tint = action.contentColor,
+            modifier = Modifier.size(24.dp)
+        )
+      } else {
+        Text(
+            text = action.label.take(1),
+            color = action.contentColor,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+      }
     }
     Spacer(modifier = Modifier.height(4.dp))
-    Text(action.label, fontSize = 12.sp, color = Color(0xFF5F6368))
+    Text(
+        text = action.label,
+        fontSize = 12.sp,
+        color = Color(0xFF5F6368),
+        // 文字区域也响应点击（可选），但不显示高亮
+        modifier = Modifier.clickable(
+            interactionSource = interactionSource,
+            indication = null,  // 文字无高亮
+            onClick = onClick
+        )
+    )
   }
 }
 
@@ -407,7 +372,7 @@ fun PoiDetailCardV2(
 
 // ==================== 数据模型 ====================
 data class QuickAction(
-    val icon: ImageVector,
+    val icon: ImageVector?=null,
     val label: String,
     val containerColor: Color,
     val contentColor: Color
@@ -422,111 +387,49 @@ data class PoiItem(
     val address: String,
     val tags: List<String>
 )
-
-
+///========少量快捷操作按钮
 @Composable
-fun BottomSheetContentV3(
-    targetValue: FlexibleSheetValue,
-    sheetState: FlexibleSheetState,
-    onPoiClick: (PoiItem) -> Unit
+fun CollapsedQuickActions(
+    actions: List<QuickAction>,
+    onActionClick: (QuickAction) -> Unit,
 ) {
-  val scope = rememberCoroutineScope()
-  val density = LocalDensity.current
-  val configuration = LocalConfiguration.current
-  // ========== 内部处理 POI 点击 ==========
-  fun handlePoiClick(poi: PoiItem) {
-      scope.launch {
-        onPoiClick(poi)
-      }
-  }
-  Column(
+  Row(
       modifier = Modifier
           .fillMaxWidth()
-          .fillMaxHeight()
+          .padding(horizontal = 16.dp),
+      horizontalArrangement = Arrangement.SpaceEvenly
   ) {
-    SearchHeaderV2()
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        contentAlignment = Alignment.Center
-    ) {
-      Box(
+    actions.take(4).forEach { action ->
+      QuickActionItem(action) { onActionClick(action) }
+    }
+  }
+}
+///========所有的快捷操作按钮，建议不要超过12个
+@Composable
+fun ExpandedQuickActions(
+    actions: List<QuickAction>,
+    onActionClick: (QuickAction) -> Unit,
+) {
+  // 按每行 4 个自动切分，支持任意数量
+  val rows = actions.chunked(4)
+  Column {
+    rows.forEachIndexed { index, rowActions ->
+      if (index > 0) {
+        Spacer(modifier = Modifier.height(12.dp))
+      }
+      Row(
           modifier = Modifier
-              .width(40.dp)
-              .height(4.dp)
-              .clip(RoundedCornerShape(2.dp))
-              .background(Color(0xFFDADCE0))
-      )
-    }
-    var status = (sheetState.targetValue !=  FlexibleSheetValue.SlightlyExpanded)
-    val issExpanded by remember {
-      derivedStateOf {
-        sheetState.currentValue != FlexibleSheetValue.SlightlyExpanded
+              .fillMaxWidth()
+              .padding(horizontal = 16.dp),
+          horizontalArrangement = Arrangement.SpaceEvenly
+      ) {
+        rowActions.forEach { action ->
+          QuickActionItem(
+              action = action,
+              onClick = { onActionClick(action) }
+          )
+        }
       }
     }
-    AnimatedContent(
-        targetState = issExpanded,
-        label = "quick_actions"
-    ) { isExpanded ->
-      if (isExpanded) {
-        ExpandedQuickActions()
-      } else {
-        CollapsedQuickActions()
-      }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .height(1.dp)
-            .alpha(0.3f +  sheetState.visibilityProgress * 0.7f)
-            .background(Color(0xFFDADCE0))
-    )
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-      Text(
-          text = "附近推荐",
-          fontSize = if (status) 18.sp else 16.sp,
-          fontWeight = FontWeight.Bold,
-          color = Color(0xFF202124)
-      )
-      TextButton(onClick = { }) {
-        Text("查看更多", fontSize = 13.sp)
-      }
-    }
-
-    Spacer(modifier = Modifier.height(8.dp))
-
-    val samplePois = remember {
-      listOf(
-          PoiItem("1", "星巴克咖啡", "餐饮", 4.8f, "120m", "建国路88号SOHO现代城", listOf("咖啡", "WiFi", "安静")),
-          PoiItem("2", "万达广场", "购物", 4.6f, "350m", "长安街1号", listOf("商场", "IMAX", "餐饮")),
-          PoiItem("3", "建国门地铁站", "交通", 4.9f, "80m", "建国门站B口", listOf("1号线", "2号线", "换乘")),
-          PoiItem("4", "海底捞火锅", "餐饮", 4.7f, "500m", "朝阳路66号", listOf("火锅", "24小时", "排队")),
-          PoiItem("5", "北京协和医院", "医疗", 4.9f, "1.2km", "东单北大街53号", listOf("三甲", "急诊", "专家")),
-          PoiItem("6", "全聚德烤鸭店", "餐饮", 4.5f, "800m", "前门大街30号", listOf("烤鸭", "老字号", "宴请")),
-      )
-    }
-
-    LazyColumn(
-        modifier = Modifier.weight(1f),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
-    ) {
-      items(samplePois, key = { it.id }) { poi ->
-        PoiListItemV2(poi = poi, onClick = { handlePoiClick(poi) })
-      }
-    }
-
-    Spacer(modifier = Modifier.height(16.dp))
   }
 }

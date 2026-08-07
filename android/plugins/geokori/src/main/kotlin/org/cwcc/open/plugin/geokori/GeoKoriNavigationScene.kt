@@ -41,11 +41,15 @@ import org.cwcc.open.geokori.ui.material3.bottomsheet.FlexibleBottomSheet
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetSize
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetValue
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.rememberFlexibleBottomSheetState
-import org.cwcc.open.plugin.geokori.ui.BottomSheetContentV3
+import org.cwcc.open.plugin.geokori.ui.BottomSheetContent
 import org.cwcc.open.plugin.geokori.ui.DestinationSelectionBottomSheet
 import org.cwcc.open.plugin.geokori.ui.DestinationSelectionCameraEffect
+import org.cwcc.open.plugin.geokori.ui.GeoKoriCenterSheet
 import org.cwcc.open.plugin.geokori.ui.PoiDetailCardV2
 import org.cwcc.open.plugin.geokori.ui.PoiItem
+import org.cwcc.open.plugin.geokori.ui.QuickAction
+import org.cwcc.open.plugin.geokori.ui.defaultPoiList
+import org.cwcc.open.plugin.geokori.ui.defaultQuickActions
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.map.MapOptions
@@ -202,65 +206,33 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
       }
     }
   }
-
-// ========== BottomSheet ==========
-  FlexibleBottomSheet(
-      sheetState = sheetState,
-      containerColor = Color.White,
-      onTargetChanges = { targetValue = it },
-      dragHandle = null,
-      windowInsets = WindowInsets.systemBars,
-      modifier = Modifier.fillMaxSize()
-  ) {
-    if (sceneState.isDestinationSheetVisible) {
-      sceneState.selectedDestination?.let { destination ->
-        DestinationSelectionBottomSheet(
-            destination = destination,
-            onClose = { viewModel.clearSelectedDestination() },
-            onStartNavigation = { viewModel.startSelectedDestinationNavigation() },
-            onSheetHeightChanged = viewModel::setDestinationSheetHeight,
-            onAddGeoNote = { viewModel.addDestinationAsGeoNote(destination.coordinate) },
-        )
-      }
-    } else {
-      BottomSheetContentV3(
-          targetValue = targetValue,
-          sheetState = sheetState,
-          onPoiClick = { poi ->
-            selectedPoi = poi
-          },
+  if (sceneState.isDestinationSheetVisible) {
+    sceneState.selectedDestination?.let { destination ->
+      DestinationSelectionBottomSheet(
+          destination = destination,
+          onClose = { viewModel.clearSelectedDestination() },
+          onStartNavigation = { viewModel.startSelectedDestinationNavigation() },
+          onSheetHeightChanged = viewModel::setDestinationSheetHeight,
+          onAddGeoNote = { viewModel.addDestinationAsGeoNote(destination.coordinate) },
       )
     }
   }
-
-// ========== POI 详情：非模态 Popup，真正屏幕正中央，点击外部关闭 ==========
-  if (selectedPoi != null) {
-    // 明确计算卡片宽度，避免 wrap content 测量冲突
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val cardWidth = (screenWidth * 0.85f).coerceAtMost(360.dp)
-
-    Popup(
-        alignment = Alignment.Center,           // ← 窗口本身在屏幕正中央
-        properties = PopupProperties(
-            focusable = false,                  // ← 非模态：不拦截背后地图/BottomSheet 的触摸
-            dismissOnClickOutside = true,       // ← 点击卡片外部区域自动关闭
-            dismissOnBackPress = true,          // ← 返回键关闭
-        ),
-        onDismissRequest = { selectedPoi = null }
-    ) {
-      // 传入明确宽度，确保 Popup 窗口大小 = 卡片大小，不再靠左靠顶
-      PoiDetailCardV2(
-          poi = selectedPoi!!,
-          onClose = { selectedPoi = null },
-          onNavigate = {
-            // 触发导航逻辑
-          },
-          modifier = Modifier.width(cardWidth)
-      )
-    }
-  }
-
-
+  else
+  GeoKoriCenterSheet(
+      quickActions = defaultQuickActions(),
+      poiList = defaultPoiList(), // 自定义你的 POI 数据
+      onPoiSelected = { poi ->
+        //viewModel.trackPoiClick(poi)
+      },
+      onPoiNavigate = { poi ->
+        //viewModel.startNavigation(poi)
+      },
+      onQuickActionClick = { action ->
+        //viewModel.handleQuickAction(action)
+      },
+      onPoiDetailClose = {
+        // 可选：埋点、恢复 UI 等
+      })
 }
 
 @Composable

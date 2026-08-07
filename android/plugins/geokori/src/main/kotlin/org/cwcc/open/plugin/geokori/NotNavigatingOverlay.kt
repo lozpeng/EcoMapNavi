@@ -41,10 +41,9 @@ import org.cwcc.open.geokori.ui.material3.bottomsheet.FlexibleBottomSheet
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetSize
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetState
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetValue
-import org.cwcc.open.geokori.ui.material3.bottomsheet.core.rememberFlexibleBottomSheetState
-import org.cwcc.open.plugin.geokori.ui.BottomSheetContentV3
-import org.cwcc.open.plugin.geokori.ui.PoiDetailCardV2
-import org.cwcc.open.plugin.geokori.ui.PoiItem
+import org.cwcc.open.plugin.geokori.ui.GeoKoriCenterSheet
+import org.cwcc.open.plugin.geokori.ui.defaultPoiList
+import org.cwcc.open.plugin.geokori.ui.defaultQuickActions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -136,21 +135,5 @@ fun NotNavigatingOverlay(
         },
     )
   }
-}
 
-// 辅助函数：根据 BottomSheet 状态计算偏移量
-@Composable
-private fun getBottomSheetOffset(
-    sheetState: FlexibleSheetState,
-    targetValue: FlexibleSheetValue
-): Dp {
-  val progress = sheetState.visibilityProgress // 需要在 FlexibleBottomSheetState 中暴露
-  val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-  val bottomSheetHeight = when (targetValue) {
-    FlexibleSheetValue.FullyExpanded -> screenHeight * 0.9f
-    FlexibleSheetValue.IntermediatelyExpanded -> screenHeight * 0.5f
-    FlexibleSheetValue.SlightlyExpanded -> screenHeight * 0.18f
-    else -> screenHeight * 0.5f
-  }
-  return bottomSheetHeight + 16.dp // 额外间距
 }
