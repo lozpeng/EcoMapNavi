@@ -192,6 +192,7 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
         sheetState = geoKoriCentreState,
         quickActions = defaultQuickActions(),
         poiList = defaultPoiList(), // 自定义你的 POI 数据
+        sheetWidth = 300.dp,
         onPoiSelected = { poi ->
           //viewModel.trackPoiClick(poi)
         },
