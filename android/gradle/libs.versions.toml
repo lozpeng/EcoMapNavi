@@ -60,7 +60,8 @@ koin = "4.1.0"
 kotlin-reflect = "2.3.20"
 foundation = "1.11.4"
 ui = "1.11.4"
-material3 = "1.4.0"     # 与 kotlin 版本一致
+material3 = "1.4.0"
+foundationLayout = "1.11.4"     # 与 kotlin 版本一致
 [libraries]
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 
@@ -194,6 +195,7 @@ gsyVideoPlayer-armv7a = { group = "io.github.carguo", name = "gsyvideoplayer-arm
 gsyVideoPlayer-arm64 = { group = "io.github.carguo", name = "gsyvideoplayer-arm64", version.ref = "gsyVideoPlayer" }
 gsyVideoPlayer-exo = { group = "io.github.carguo", name = "gsyvideoplayer-ex_so", version.ref = "gsyVideoPlayer" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+androidx-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 
 
 [plugins]

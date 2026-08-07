@@ -27,7 +27,6 @@ class PluginEntryClass : IPluginEntryClass,AndroidTtsStatusListener {
 
     override fun onLoad(context: PluginContext) {
       initTTs(context)
-
     }
 
     override fun onUnload() {

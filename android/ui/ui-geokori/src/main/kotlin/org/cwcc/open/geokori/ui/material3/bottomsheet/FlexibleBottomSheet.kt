@@ -1,7 +1,9 @@
 package org.cwcc.open.geokori.ui.material3.bottomsheet
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -31,7 +33,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalConfiguration
+
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.dismiss
@@ -102,7 +104,6 @@ public fun FlexibleBottomSheet(
     dragHandle: @Composable (() -> Unit)? = { BottomSheetDefaults.DragHandle() },
     windowInsets: WindowInsets = BottomSheetDefaults.windowInsets,
     content: @Composable ColumnScope.() -> Unit,
-
 ) {
   val scope = rememberCoroutineScope()
 
@@ -121,7 +122,6 @@ public fun FlexibleBottomSheet(
     }
   }
 
-  // Callback that is invoked when the anchors have changed.
   val anchorChangeHandler = remember(sheetState, scope) {
     flexibleBottomSheetAnchorChangeHandler(
         state = sheetState,
@@ -151,41 +151,19 @@ public fun FlexibleBottomSheet(
         ).size
   }
 
-  FlexibleBottomSheetPopup(
-      onDismissRequest = {
-        when (sheetState.currentValue) {
-          FlexibleSheetValue.FullyExpanded
-            if sheetState.hasIntermediatelyExpandedState -> {
-                scope.launch { sheetState.intermediatelyExpand() }
-          }
-
-          FlexibleSheetValue.IntermediatelyExpanded
-            if sheetState.hasSlightlyExpandedState -> {
-                scope.launch { sheetState.slightlyExpand() }
-          }
-
-          else -> {
-                scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
-          }
-        }
-        onBackPressed.invoke()
-      },
-      sheetState = sheetState,
-      windowInsets = windowInsets,
-  ) {
+  // ========== 提取内容体：BoxScope 扩展，供模态/非模态复用 ==========
+  val sheetContent: @Composable BoxScope.() -> Unit = {
     var isDragging by remember { mutableStateOf(false) }
     val isAnimationRunning = sheetState.swipeableState.isAnimationRunning
     val screenHeightSize = screenHeight()
     val screenHeightPxSize = screenHeightSize.toPx()
     val density = LocalDensity.current
 
-    // Track measured content height for wrap content mode
     var contentHeightPx by remember { mutableStateOf(0f) }
     val contentHeightDp = with(density) { contentHeightPx.toDp() }
 
     val flexibleSheetSize = sheetState.flexibleSheetSize
 
-    // Resolve sizes considering wrap content mode
     val resolvedFullyExpanded = flexibleSheetSize.fullyExpanded
         .resolveSheetSize(screenHeightPxSize, contentHeightPx)
     val resolvedIntermediatelyExpanded = flexibleSheetSize.intermediatelyExpanded
@@ -197,45 +175,28 @@ public fun FlexibleBottomSheet(
 
     val expectedSheetSize: Dp = when (sheetState.targetValue) {
       FlexibleSheetValue.Hidden -> 1.dp
-
       FlexibleSheetValue.FullyExpanded -> screenHeightSize * resolvedFullyExpanded
-
       FlexibleSheetValue.IntermediatelyExpanded ->
         screenHeightSize * resolvedIntermediatelyExpanded
-
       FlexibleSheetValue.SlightlyExpanded -> screenHeightSize * resolvedSlightlyExpanded
     }
 
     val sheetModifier = if (sheetState.isModal) {
-      // Use a height that changes with contentHeight to trigger anchor recalculation
-      // when wrap content is used. The tiny offset ensures layout size changes.
       if (flexibleSheetSize.hasWrapContent) {
         Modifier.fillMaxWidth().height(screenHeightSize + (contentHeightPx * 0.0001f).dp)
       } else {
         Modifier.fillMaxSize()
       }
     } else {
-      Modifier.height(
-          if (isDragging || isAnimationRunning) {
-            fullyExpandedHeight
-          } else {
-            expectedSheetSize
-          },
-      )
-      //尝试修复UI闪烁的问题
-      // 非模态 Sheet 始终使用全高，通过 offset 控制显示区域
-      // 避免拖动结束时高度突变导致内容重新测量闪烁,改成下面的可能会导致遮盖下层UI，不能操作
-      //Modifier.fillMaxWidth().height(fullyExpandedHeight)
+      // 非模态：容器始终使用全高，通过 offset 控制显示区域
+      // 避免拖动结束时高度突变导致闪烁
+      // 在嵌入模式下，透明区域不拦截下层触摸（同一 Compose 树自然透传）
+      Modifier.fillMaxWidth().height(fullyExpandedHeight)
     }
 
-    // Hide sheet until content is measured when using wrap content mode
     val isContentMeasured = contentHeightPx > 0f
     val needsContentMeasurement = flexibleSheetSize.hasWrapContent && !isContentMeasured
 
-    // The modal scrim must fill the entire popup window (edge-to-edge), independent of the sheet's
-    // container. It used to be drawn inside the sheet container, which for wrap-content sheets is
-    // only screenHeight() tall and bottom-aligned; under enableEdgeToEdge() screenHeight() excludes
-    // the system bars, so the scrim left a status-bar-sized gap at the top of the screen (#98/#15).
     if (sheetState.isModal) {
       Scrim(
           color = scrimColor,
@@ -246,15 +207,7 @@ public fun FlexibleBottomSheet(
 
     BoxWithConstraints(
         modifier = sheetModifier
-            .align(Alignment.BottomCenter)
-            .graphicsLayer {
-              alpha = when {
-                needsContentMeasurement -> 0f
-                sheetState.targetValue == FlexibleSheetValue.Hidden &&
-                    !isDragging && !isAnimationRunning -> 0f
-                else -> 1f
-              }
-            },
+            .align(Alignment.BottomCenter), // ← 现在可以解析：sheetContent 是 BoxScope.() -> Unit
     ) {
       val constraintHeight = constraints.maxHeight.toFloat()
       val bottomSheetPaneTitle = "Bottom Sheet"
@@ -265,37 +218,13 @@ public fun FlexibleBottomSheet(
               .fillMaxHeight()
               .align(Alignment.BottomCenter)
               .semantics { paneTitle = bottomSheetPaneTitle }
-              .offset{
-                  val offset = sheetState
-                      .requireOffset()
-                      .toInt()
-                  IntOffset(
-                      x = 0,
-                      y = if (sheetState.isModal) {
-                        offset
-                      } else {
-                        if (isDragging || isAnimationRunning) {
-                          offset
-                        } else {
-                          0
-                        }
-                      },
-                  )
-                }
-
-//                IntOffset(
-//                    x = 0,
-//                    y = if (sheetState.isModal) {
-//                      offset
-//                    } else {
-//                      if (isDragging || isAnimationRunning) {
-//                        offset
-//                      } else {
-//                        0
-//                      }
-//                    },
-//                )
-//              }
+              .offset {
+                val offset = sheetState.offsetOrNull
+                IntOffset(
+                    x = 0,
+                    y = offset?.toInt() ?: 0
+                )
+              }
               .nestedScroll(
                   remember(sheetState) {
                     if (sheetState.allowNestedScroll) {
@@ -304,9 +233,7 @@ public fun FlexibleBottomSheet(
                           orientation = Orientation.Vertical,
                           screenHeight = screenHeightSize.value,
                           onFling = settleToDismiss,
-                          onDragging = {
-                            isDragging = it
-                          },
+                          onDragging = { isDragging = it },
                       )
                     } else {
                       emptySwipeWithinBottomSheetBoundsNestedScrollConnection()
@@ -322,9 +249,7 @@ public fun FlexibleBottomSheet(
                   flexibleSheetSize = sheetState.flexibleSheetSize,
                   isModal = sheetState.isModal,
                   contentHeight = contentHeightPx,
-                  onDragStarted = {
-                    isDragging = true
-                  },
+                  onDragStarted = { isDragging = true },
                   onDragStopped = {
                     isDragging = false
                     settleToDismiss(it)
@@ -335,8 +260,6 @@ public fun FlexibleBottomSheet(
           contentColor = contentColor,
           tonalElevation = tonalElevation,
       ) {
-        // Wrap content in a Box that fills the Surface and aligns content to top.
-        // This ensures content stays at the top when sheet is partially expanded.
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.TopCenter,
@@ -345,9 +268,6 @@ public fun FlexibleBottomSheet(
               modifier = Modifier
                   .fillMaxWidth()
                   .then(
-                      // For wrap content, measure against the screen height so the reported content
-                      // height is stable regardless of the (possibly collapsed) container height. This
-                      // fixes non-modal wrap content sheets staying almost hidden (issue #95).
                       if (flexibleSheetSize.hasWrapContent) {
                         Modifier.wrapContentMeasureConstraint(screenHeightPxSize.toInt())
                       } else {
@@ -373,8 +293,6 @@ public fun FlexibleBottomSheet(
                   modifier = Modifier
                       .align(Alignment.CenterHorizontally)
                       .semantics(mergeDescendants = true) {
-                        // Provides semantics to interact with the bottomsheet based on its
-                        // current value.
                         with(sheetState) {
                           dismiss(dismissActionLabel) {
                             animateToDismiss()
@@ -435,6 +353,54 @@ public fun FlexibleBottomSheet(
       }
     }
   }
+
+  // ========== 模态 vs 非模态分发 ==========
+  if (sheetState.isModal) {
+    FlexibleBottomSheetPopup(
+        onDismissRequest = {
+          when (sheetState.currentValue) {
+            FlexibleSheetValue.FullyExpanded if sheetState.hasIntermediatelyExpandedState -> {
+              scope.launch { sheetState.intermediatelyExpand() }
+            }
+            FlexibleSheetValue.IntermediatelyExpanded if sheetState.hasSlightlyExpandedState -> {
+              scope.launch { sheetState.slightlyExpand() }
+            }
+            else -> {
+              scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+            }
+          }
+          onBackPressed.invoke()
+        },
+        sheetState = sheetState,
+        windowInsets = windowInsets,
+    ) {
+      sheetContent()
+    }
+  } else {
+    // 非模态：直接嵌入 Compose 树，不使用 PopupWindow
+    // 触摸在 Surface 以外的透明区域自然透传给下层地图
+    Box(modifier = Modifier.fillMaxSize()) {
+      sheetContent()
+    }
+
+    if (!sheetState.skipHiddenState) {
+      BackHandler {
+        when (sheetState.currentValue) {
+          FlexibleSheetValue.FullyExpanded if sheetState.hasIntermediatelyExpandedState -> {
+            scope.launch { sheetState.intermediatelyExpand() }
+          }
+          FlexibleSheetValue.IntermediatelyExpanded if sheetState.hasSlightlyExpandedState -> {
+            scope.launch { sheetState.slightlyExpand() }
+          }
+          else -> {
+            scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+          }
+        }
+        onBackPressed.invoke()
+      }
+    }
+  }
+
   if (sheetState.hasFullyExpandedState) {
     LaunchedEffect(sheetState) {
       sheetState.show()

@@ -28,6 +28,8 @@ android {
 }
 
 dependencies {
+    implementation libs.androidx.foundation.layout
+
     // For as long as we support API 25; once we can raise support to 26, all is fine
     coreLibraryDesugaring libs.desugar.jdk.libs
 

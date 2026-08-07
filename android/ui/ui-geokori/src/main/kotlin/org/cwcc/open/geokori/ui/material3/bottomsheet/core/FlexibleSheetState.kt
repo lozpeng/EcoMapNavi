@@ -153,6 +153,13 @@ public class FlexibleSheetState(
   public fun requireOffset(): Float = swipeableState.requireOffset()
 
   /**
+   * The current offset in pixels, or null if it has not been initialized yet.
+   * Unlike [requireOffset], this does not throw before the first layout pass,
+   * making it safe to read from composition or layout modifiers.
+   */
+  public val offsetOrNull: Float? get() = swipeableState.offsetOrNull
+
+  /**
    * Whether the sheet has an expanded state defined.
    */
   public val hasFullyExpandedState: Boolean
