@@ -82,7 +82,8 @@ import org.cwcc.open.geokori.ui.material3.bottomsheet.core.wrapContentMeasureCon
  * @param dragHandle Optional visual marker to swipe the bottom sheet.
  * @param windowInsets window insets to be passed to the bottom sheet window via [PaddingValues]
  * params.
- * @param sheetWidth Fixed width for the sheet. If null, defaults to fillMaxWidth with max 640dp.
+ * @param sheetWidth Fixed width for the sheet. If null, defaults to fillMaxWidth with max 640dp,
+ *                   and auto-adapts to half width on wide screens (>600dp).
  * @param sheetHorizontalAlignment Horizontal alignment of the sheet within its container.
  * @param content The content to be displayed inside the bottom sheet.
  */
@@ -157,14 +158,6 @@ public fun FlexibleBottomSheet(
     else -> Alignment.BottomCenter
   }
 
-  val widthModifier = if (sheetWidth != null) {
-    Modifier.width(sheetWidth)
-  } else {
-    Modifier
-        .widthIn(max = BottomSheetMaxWidth)
-        .fillMaxWidth()
-  }
-
   // Extract content body as BoxScope extension for reuse by both modal and non-modal modes
   val sheetContent: @Composable BoxScope.() -> Unit = {
     var isDragging by remember { mutableStateOf(false) }
@@ -235,10 +228,32 @@ public fun FlexibleBottomSheet(
             },
     ) {
       val constraintHeight = constraints.maxHeight.toFloat()
+      // ==================== 核心修改开始 ====================
+      // 利用 BoxWithConstraints 获取父容器实际分配宽度
+      val constraintMaxWidth = maxWidth
+
+    // 优先级：
+    // 1. 外部明确传入的 sheetWidth 绝对优先（直接使用，不做任何二次处理）
+    // 2. 未传入时，内部根据实际容器宽度自适应：
+    //    - 宽屏 (>600dp)：占父容器一半
+    //    - 普通屏幕：全宽（但不超过最大宽度限制）
+//      val actualSheetWidth = sheetWidth ?: when {
+//        constraintMaxWidth > 600.dp -> (constraintMaxWidth / 2).coerceAtMost(BottomSheetMaxWidth)
+//        else -> constraintMaxWidth.coerceAtMost(BottomSheetMaxWidth)
+//      }
+      val actualSheetWidth = sheetWidth ?: when {
+        constraintMaxWidth > 600.dp -> (constraintMaxWidth / 2).coerceAtMost(BottomSheetMaxWidth)
+        else -> constraintMaxWidth  // 非宽屏：全宽，不限制最大宽度
+      }
+
+    // 构建最终的宽度修饰符
+      val actualWidthModifier = Modifier.width(actualSheetWidth)
+      // ==================== 核心修改结束 ====================
+
       val bottomSheetPaneTitle = "Bottom Sheet"
       Surface(
           modifier = modifier
-              .then(widthModifier)
+              .width(actualSheetWidth)
               .fillMaxHeight()
               .align(boxAlignment)
               .semantics { paneTitle = bottomSheetPaneTitle }

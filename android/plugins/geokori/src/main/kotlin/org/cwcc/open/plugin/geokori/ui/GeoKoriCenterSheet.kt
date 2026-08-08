@@ -5,7 +5,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -39,8 +37,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -113,125 +111,132 @@ fun GeoKoriCenterSheet(
     onPoiDetailClose: () -> Unit = {},
     onSheetDismiss: () -> Unit = {},
 ) {
-  // ========== 内部自治状态 ==========
   var selectedPoi by remember { mutableStateOf<PoiItem?>(null) }
   var previousSheetValue by remember { mutableStateOf<FlexibleSheetValue?>(null) }
 
-  // ========== 使用 BoxWithConstraints 获取实际可用宽度，确保折叠屏/分屏/平板数值准确 ==========
-  BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-    // 这里拿到的 maxWidth 是父容器实际分配给该组件的宽度，比 LocalConfiguration 更可靠
-    val containerWidth = maxWidth
-    // 大屏阈值：>= 600dp 即视为折叠屏展开或平板
-    val isWideScreen = containerWidth >= 600.dp
-    val adaptiveWidth = sheetWidth ?: when {
-      isWideScreen -> containerWidth / 2   // 占屏幕一半
-      else -> null                           // 手机：保持默认全宽
-    }
+  // ========== 使用 LocalWindowInfo 获取实时容器宽度 ==========
+  val windowInfo = LocalWindowInfo.current
+  val containerWidthPx = windowInfo.containerSize.width
+  val density = LocalDensity.current
+  val containerWidthDp = with(density) { containerWidthPx.toDp() }
 
-    val adaptiveAlignment = sheetHorizontalAlignment ?: when {
-      isWideScreen -> Alignment.Start        // 默认靠左
-      else -> Alignment.CenterHorizontally   // 手机：居中
-    }
+  // 判断是否为宽屏（折叠屏展开/平板）
+  val isWideScreen by remember(containerWidthDp) {
+    derivedStateOf { containerWidthDp >= 600.dp }
+  }
 
-    // ========== Sheet 与弹窗状态联动 ==========
-    LaunchedEffect(selectedPoi) {
-      if (shouldCollapseSheetOnPoiSelect) {
-        if (selectedPoi != null) {
-          if (previousSheetValue == null) {
-            previousSheetValue = sheetState.currentValue
-          }
-          if (sheetState.currentValue != FlexibleSheetValue.SlightlyExpanded) {
-            sheetState.slightlyExpand()
-          }
-        } else {
-          previousSheetValue?.let { prev ->
-            if (sheetState.currentValue != prev) {
-              sheetState.animateTo(prev)
-            }
-            previousSheetValue = null
-          }
+  // 计算 Sheet 宽度
+  // 宽屏：占容器宽度一半；手机/折叠屏折叠：传 null 让 FlexibleBottomSheet 内部处理为全宽
+  val adaptiveWidth = sheetWidth ?: when {
+    isWideScreen -> containerWidthDp / 2
+    else -> null
+  }
+
+  // 计算水平对齐方式
+  // 宽屏默认靠左；手机默认居中
+  val adaptiveAlignment = sheetHorizontalAlignment ?: when {
+    isWideScreen -> Alignment.Start
+    else -> Alignment.CenterHorizontally
+  }
+
+  // ========== Sheet 与弹窗状态联动 ==========
+  LaunchedEffect(selectedPoi) {
+    if (shouldCollapseSheetOnPoiSelect) {
+      if (selectedPoi != null) {
+        if (previousSheetValue == null) {
+          previousSheetValue = sheetState.currentValue
         }
-      }
-    }
-
-    // ========== BottomSheet 主体 ==========
-    FlexibleBottomSheet(
-        sheetState = sheetState,
-        containerColor = Color.White,
-        onTargetChanges = { },
-        onDismissRequest = onSheetDismiss,
-        dragHandle = null,
-        windowInsets = WindowInsets.systemBars,
-        sheetWidth = adaptiveWidth,
-        sheetHorizontalAlignment = adaptiveAlignment,
-        modifier = Modifier.fillMaxSize()
-    ) {
-      if (isDestinationSheetVisible && destination != null) {
-        destinationContent()
+        if (sheetState.currentValue != FlexibleSheetValue.SlightlyExpanded) {
+          sheetState.slightlyExpand()
+        }
       } else {
-        BottomSheetContent(
-            sheetState = sheetState,
-            quickActions = quickActions,
-            poiList = poiList,
-            onPoiClick = { poi ->
-              selectedPoi = poi
-              onPoiSelected(poi)
-            },
-            onQuickActionClick = onQuickActionClick,
-        )
+        previousSheetValue?.let { prev ->
+          if (sheetState.currentValue != prev) {
+            sheetState.animateTo(prev)
+          }
+          previousSheetValue = null
+        }
       }
     }
+  }
 
-    // ========== 非模态 POI 详情弹窗（屏幕正中央） ==========
-    if (selectedPoi != null) {
-      // 弹窗宽度也基于实际容器宽度计算，大屏下更合理
-      val cardWidth = (containerWidth * 0.85f).coerceAtMost(360.dp)
+  // ========== BottomSheet 主体 ==========
+  FlexibleBottomSheet(
+      sheetState = sheetState,
+      containerColor = Color.White,
+      onDismissRequest = onSheetDismiss,
+      dragHandle = null,
+      windowInsets = WindowInsets.systemBars,
+      sheetWidth = adaptiveWidth,
+      sheetHorizontalAlignment = adaptiveAlignment,
+      modifier = when(isWideScreen) {
+        true -> Modifier
+        false -> Modifier.fillMaxSize()
+      }
+  ) {
+    if (isDestinationSheetVisible && destination != null) {
+      destinationContent()
+    } else {
+      BottomSheetContent(
+          sheetState = sheetState,
+          quickActions = quickActions,
+          poiList = poiList,
+          onPoiClick = { poi ->
+            selectedPoi = poi
+            onPoiSelected(poi)
+          },
+          onQuickActionClick = onQuickActionClick,
+      )
+    }
+  }
 
-      Popup(
-          alignment = Alignment.Center,
-          properties = PopupProperties(
-              focusable = false,
-              dismissOnClickOutside = true,
-              dismissOnBackPress = true,
-          ),
-          onDismissRequest = {
-            selectedPoi = null
-            onPoiDetailClose()
-          }
-      ) {
-        var visible by remember { mutableStateOf(false) }
-        LaunchedEffect(Unit) { visible = true }
+  // ========== 非模态 POI 详情弹窗 ==========
+  if (selectedPoi != null) {
+    val cardWidth = (containerWidthDp * 0.85f).coerceAtMost(360.dp)
 
-        val density = LocalDensity.current
-        val offsetY by androidx.compose.animation.core.animateIntOffsetAsState(
-            targetValue = if (visible) {
-              androidx.compose.ui.unit.IntOffset(0, 0)
-            } else {
-              androidx.compose.ui.unit.IntOffset(0, with(density) { 80.dp.toPx().toInt() })
-            },
-            animationSpec = androidx.compose.animation.core.spring(
-                dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy
-            ),
-            label = "poi_card_slide"
-        )
-
-        Box(
-            modifier = Modifier
-                .width(cardWidth)
-                .offset { offsetY }
-        ) {
-          PoiDetailCardV2(
-              poi = selectedPoi!!,
-              onClose = {
-                selectedPoi = null
-                onPoiDetailClose()
-              },
-              onNavigate = {
-                selectedPoi?.let { onPoiNavigate(it) }
-              },
-              modifier = Modifier.fillMaxWidth()
-          )
+    Popup(
+        alignment = Alignment.Center,
+        properties = PopupProperties(
+            focusable = false,
+            dismissOnClickOutside = true,
+            dismissOnBackPress = true,
+        ),
+        onDismissRequest = {
+          selectedPoi = null
+          onPoiDetailClose()
         }
+    ) {
+      var visible by remember { mutableStateOf(false) }
+      LaunchedEffect(Unit) { visible = true }
+
+      val offsetY by androidx.compose.animation.core.animateIntOffsetAsState(
+          targetValue = if (visible) {
+            androidx.compose.ui.unit.IntOffset(0, 0)
+          } else {
+            androidx.compose.ui.unit.IntOffset(0, with(density) { 80.dp.toPx().toInt() })
+          },
+          animationSpec = androidx.compose.animation.core.spring(
+              dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy
+          ),
+          label = "poi_card_slide"
+      )
+
+      Box(
+          modifier = Modifier
+              .width(cardWidth)
+              .offset { offsetY }
+      ) {
+        PoiDetailCardV2(
+            poi = selectedPoi!!,
+            onClose = {
+              selectedPoi = null
+              onPoiDetailClose()
+            },
+            onNavigate = {
+              selectedPoi?.let { onPoiNavigate(it) }
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
       }
     }
   }
