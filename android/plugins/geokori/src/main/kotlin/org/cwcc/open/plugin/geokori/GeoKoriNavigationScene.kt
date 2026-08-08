@@ -8,6 +8,9 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -189,6 +192,7 @@ fun DemoNavigationScene(viewModel: DemoNavigationViewModel = AppModule.viewModel
   }
   else
     GeoKoriCenterSheet(
+        Modifier.offset(y = (-55).dp),  // 向上偏移 80dp
         sheetState = geoKoriCentreState,
         quickActions = defaultQuickActions(),
         poiList = defaultPoiList(), // 自定义你的 POI 数据

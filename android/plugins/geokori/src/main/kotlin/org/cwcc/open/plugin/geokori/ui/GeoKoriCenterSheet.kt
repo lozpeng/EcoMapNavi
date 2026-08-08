@@ -1,6 +1,5 @@
 package org.cwcc.open.plugin.geokori.ui
 
-import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +21,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.AcUnit
+import androidx.compose.material.icons.filled.ArtTrack
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.LocalPolice
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -45,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND
 import org.cwcc.open.geokori.ui.material3.bottomsheet.FlexibleBottomSheet
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetSize
 import org.cwcc.open.geokori.ui.material3.bottomsheet.core.FlexibleSheetState
@@ -65,7 +67,7 @@ fun rememberGeoKoriSheetState(
     flexibleSheetSize = FlexibleSheetSize(
         fullyExpanded = 0.9f,
         intermediatelyExpanded = 0.4f,
-        slightlyExpanded = 0.11f,
+        slightlyExpanded = 0.15f,
     ),
     isModal = isModal,
     skipSlightlyExpanded = false,
@@ -110,6 +112,7 @@ fun GeoKoriCenterSheet(
     onQuickActionClick: (QuickAction) -> Unit = {},
     onPoiDetailClose: () -> Unit = {},
     onSheetDismiss: () -> Unit = {},
+    bottomPadding: Dp = 0.dp,  // 新增底部 padding 参数
 ) {
   var selectedPoi by remember { mutableStateOf<PoiItem?>(null) }
   var previousSheetValue by remember { mutableStateOf<FlexibleSheetValue?>(null) }
@@ -169,10 +172,16 @@ fun GeoKoriCenterSheet(
       windowInsets = WindowInsets.systemBars,
       sheetWidth = adaptiveWidth,
       sheetHorizontalAlignment = adaptiveAlignment,
-      modifier = when(isWideScreen) {
-        true -> Modifier
-        false -> Modifier.fillMaxSize()
-      }
+//      modifier = when(isWideScreen) {
+//        true -> Modifier.padding(bottom = bottomPadding)
+//        false -> Modifier.fillMaxSize().padding(bottom = bottomPadding)
+//      }
+      modifier = modifier.then(
+          when(isWideScreen) {
+            true -> Modifier
+            false -> Modifier.fillMaxSize()
+          }
+      )
   ) {
     if (isDestinationSheetVisible && destination != null) {
       destinationContent()

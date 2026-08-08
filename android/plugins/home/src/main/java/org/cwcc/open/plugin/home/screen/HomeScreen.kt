@@ -1,9 +1,9 @@
 package org.cwcc.open.plugin.home.screen
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,46 +11,42 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND
 import com.combo.core.runtime.PluginManager
-import org.cwcc.open.plugin.common.component.EmptyPage
-import org.cwcc.open.plugin.home.state.PluginStatus
-import org.cwcc.open.plugin.home.viewmodel.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.cwcc.open.plugin.common.navigation.NavigationAnimations.fadeIn
-import org.cwcc.open.plugin.common.navigation.NavigationAnimations.fadeOut
+import org.cwcc.open.plugin.common.component.EmptyPage
+import org.cwcc.open.plugin.home.state.PluginStatus
+import org.cwcc.open.plugin.home.viewmodel.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -65,11 +61,6 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
   val context = LocalContext.current
   var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.GeoKori) }
 
-  // 面板状态
-  val sheetState = rememberImmersiveSheetState(SheetAnchor.PEEK)
-  var sheetProgress by remember { mutableFloatStateOf(0f) }
-  var selectedPoi by remember { mutableStateOf<PoiItem?>(null) }
-
   // 监听错误消息
   LaunchedEffect(state.isError, state.errorMessage) {
     if (state.isError && state.errorMessage != null) {
@@ -81,86 +72,55 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
       WIDTH_DP_EXPANDED_LOWER_BOUND
   )
 
-  NavigationSuiteScaffold(
-      navigationSuiteItems = {
-        AppDestinations.entries.forEach {
-          item(
-              icon = { Icon(it.icon, contentDescription = it.label) },
-              label = { Text(it.label) },
-              selected = it == currentDestination,
-              onClick = { currentDestination = it },
-          )
-        }
-      },
-      layoutType = if (isWidScreen) {
-        NavigationSuiteType.NavigationDrawer
-      } else {
-        NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
-      },
-  ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-      // 1. 最底层：地图/插件内容
-      when (currentDestination) {
-        AppDestinations.GeoKori -> PluginScreenContent(
-            pluginId = HomeViewModel.PLUGIN_GEOKORI,
-            viewModel = viewModel
-        )
-        AppDestinations.SAMPLE -> PluginScreenContent(
-            pluginId = HomeViewModel.PLUGIN_EXAMPLE,
-            viewModel = viewModel
-        )
-        AppDestinations.SETTING -> PluginScreenContent(
-            pluginId = HomeViewModel.PLUGIN_SETTING,
-            viewModel = viewModel
-        )
-      }
+  // ========== 使用 Box 包裹所有内容 ==========
+  Box(modifier = Modifier.fillMaxSize()) {
+    // 1. 主内容（底层）
+    PluginScreenContent(
+        pluginId = HomeViewModel.PLUGIN_GEOKORI,
+        viewModel = viewModel
+    )
 
-//      // 2. 覆盖层：底部沉浸式面板
-//      ImmersiveBottomSheet(
-//          sheetState = sheetState,
-//          onSheetProgress = { sheetProgress = it },
-//          onAnchorChanged = { anchor ->
-//            if (anchor == SheetAnchor.COLLAPSED) {
-//              selectedPoi = null
-//            }
-//          }
-//      ) {
-//        BottomSheetContentV2(
-//            progress = sheetProgress,
-//            sheetState = sheetState,
-//            onPoiClick = { poi ->
-//              selectedPoi = poi
-//            }
-//        )
-//      }
-//
-//      // 3. POI 详情浮层
-//      AnimatedVisibility(
-//          visible = selectedPoi != null && sheetState.currentAnchor != SheetAnchor.EXPANDED,
-//          enter = slideInVertically { it } + fadeIn(),
-//          exit = slideOutVertically { it } + fadeOut(),
-//          modifier = Modifier.align(Alignment.BottomCenter)
-//      ) {
-//        selectedPoi?.let { poi ->
-//          PoiDetailCardV2(
-//              poi = poi,
-//              onClose = {
-//                selectedPoi = null
-//              },
-//              onNavigate = {
-//                // 触发导航逻辑
-//              },
-//              modifier = Modifier
-//                  .padding(horizontal = 12.dp)
-//                  .padding(bottom = 240.dp)
-//                  .fillMaxWidth()
-//          )
-//        }
-//      }
+    // 2. 底部工具栏（上层）
+    val toolbarAlpha by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = tween(durationMillis = 300),
+        label = "toolbar_alpha"
+    )
 
+    val toolbarOffsetY by animateDpAsState(
+        targetValue = 0.dp,
+        animationSpec = tween(durationMillis = 300),
+        label = "toolbar_offset"
+    )
+
+    // 底部工具栏 - 使用 wrap_content 高度，让工具栏自己决定高度
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .align(Alignment.BottomCenter)  // 固定在底部
+            .offset(y = toolbarOffsetY)
+            .alpha(toolbarAlpha)
+            .zIndex(1f)
+            // 移除固定高度限制，让内容自己决定高度
+            // 添加底部 padding 确保凸起按钮不被屏幕底部裁剪
+            .padding(bottom = 0.dp)
+    ) {
+      GeoKoriCenterToolBar(
+          onItemSelected = { index ->
+            when (index) {
+              0 -> currentDestination = AppDestinations.GeoKori
+              1 -> currentDestination = AppDestinations.SAMPLE
+              2 -> { /* 发布按钮 */ }
+              3 -> currentDestination = AppDestinations.SETTING
+              4 -> currentDestination = AppDestinations.PROFILE
+            }
+          },
+          modifier = Modifier.fillMaxWidth()
+      )
     }
   }
 }
+
 /**
  * 插件页面的通用内容布局
  */
@@ -249,4 +209,5 @@ enum class AppDestinations(
   GeoKori("地图", Icons.Default.Home),
   SAMPLE("示例", Icons.Default.Star),
   SETTING("设置", Icons.Default.Settings),
+  PROFILE("我的", Icons.Default.Person),
 }

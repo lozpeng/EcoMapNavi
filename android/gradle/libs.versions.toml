@@ -62,7 +62,9 @@ foundation = "1.11.4"
 ui = "1.11.4"
 material3 = "1.4.0"
 foundationLayout = "1.11.4"
-composeMaterialCore = "1.6.2"     # 与 kotlin 版本一致
+composeMaterialCore = "1.6.2"
+runtime = "1.11.4"
+animationCore = "1.11.4"     # 与 kotlin 版本一致
 [libraries]
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 
@@ -198,6 +200,8 @@ gsyVideoPlayer-exo = { group = "io.github.carguo", name = "gsyvideoplayer-ex_so"
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 androidx-compose-material-core = { group = "androidx.wear.compose", name = "compose-material-core", version.ref = "composeMaterialCore" }
+androidx-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
+androidx-compose-animation-core = { group = "androidx.compose.animation", name = "animation-core", version.ref = "animationCore" }
 
 
 [plugins]

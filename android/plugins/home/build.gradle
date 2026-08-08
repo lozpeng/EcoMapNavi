@@ -44,8 +44,10 @@ android {
 }
 
 dependencies {
+    implementation libs.androidx.compose.animation.core
     implementation libs.androidx.compose.foundation
     implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.foundation.layout
     compileOnly project(':plugins:dependencies')
     compileOnly project(':plugins:common')
     compileOnly project(':plugins:setting')
